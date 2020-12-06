@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-
+//matching to the enum type on DB
 if ($_SESSION['nature_infection'] == 'infection_endogene')
     $nature = 'endogene';
 else $nature = 'exogene';

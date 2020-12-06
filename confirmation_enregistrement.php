@@ -62,7 +62,7 @@ session_start();
             <br />
             <table class="table  table-bordered table-hover">
             <?php
-    
+    // affichage des variables session avant enregistrement
     foreach ($_SESSION as $k=>$v) {
         echo "<tr>";
     echo "<td>".$k."</td><td>". $v."</td>";
