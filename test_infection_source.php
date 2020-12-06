@@ -2,6 +2,8 @@
 session_start();
 $_SESSION['nature_infection']=$_POST['nature_infection'];
 $_SESSION['cause_infection']=$_POST['cause_infection'];
+$_SESSION['mode_transmission']='';
+$_SESSION['nip_source']='';
 
 if($_SESSION['cause_infection']!= htmlspecialchars($_SESSION['cause_infection'])){
 

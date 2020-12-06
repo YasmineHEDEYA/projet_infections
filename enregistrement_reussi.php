@@ -8,6 +8,7 @@ else $nature = 'exogene';
 if ($_SESSION['type_infection'] == "infection_source")
     $type = "source";
 else $type = "cible";
+
 try {
     $bdd = new PDO('mysql:host=localhost;dbname=infection', 'root', '', array(PDO::ATTR_ERRMODE =>         PDO::ERRMODE_EXCEPTION));
 } catch (Exception $e) {
@@ -22,7 +23,6 @@ if ($type == 'cible')
     $req3 = 'update infection_cible set transmission="' . $_SESSION['mode_transmission'] . '", id_inf_INFECTION_SOURCE=' . $_SESSION['nip_source'] . ', id_personnel=' . $_SESSION['id_personnel'] . ', nip=' . $_SESSION['nip'] . ' where id_inf=(' . $req2 . ')';
 else
     $req3 = 'update infection_source set nature="' . $nature . '", cause="' . $_SESSION['cause_infection'] . '", id_personnel=' . $_SESSION['id_personnel'] . ', nip=' . $_SESSION['nip'] . ' where id_inf=(' . $req2 . ')';
-echo $req3;
 
 $resultat1 = $bdd->query($req3);
 ?>

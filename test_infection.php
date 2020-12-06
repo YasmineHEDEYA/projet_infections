@@ -2,7 +2,7 @@
 session_start();
 
 
- if ($_POST['type_infection']=="infection_source") {
+ if ($_SESSION['type_infection']=="infection_source") {
      header('Location: infection_source.php');
      exit();
  } else {
