@@ -16,21 +16,21 @@ session_start();
             margin-top: 20vh;
             margin-bottom: 20vh;
         }
-        
+
         input.form-control {
             box-shadow: 2px 2px 5px #24363f;
         }
-        
+
         h5,
         label {
             color: #dae3e6;
         }
-        
+
         p {
             color: white;
             font-size: 0.8em;
         }
-        
+
         body {
             background-image: url("inf.jpeg");
             background-repeat: no-repeat;
@@ -43,7 +43,7 @@ session_start();
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
-    
+
     <title>Accueil</title>
 </head>
 
@@ -53,13 +53,13 @@ session_start();
 
     <div class="col-md-6 offset-md-3">
 
-        <form class="text-center p-4"  method="POST">
-            <p class="h2 mb-2" style="color:#93acb9; text-shadow: 2px 2px 5px#24363f">Bienvenue dans le <?php echo $_SESSION['centre_hospitalier']?></p>
+        <form class="text-center p-4" method="POST">
+            <p class="h2 mb-2" style="color:#93acb9; text-shadow: 2px 2px 5px#24363f">Bienvenue dans le <?php echo $_SESSION['centre_hospitalier'] ?></p>
             <br />
             <div class="col-md-6 offset-md-3">
-            <button class="btn btn-info btn-block my-4" type="submit" formaction="formulaire.php" style="background-color:#4f798d ;box-shadow:2px 2px 5px #24363f">Ajouter une infection</button>
-            <button class="btn btn-info btn-block my-4" type="submit" formaction="recherche_infection.php" style="background-color:#4f798d ;box-shadow:2px 2px 5px #24363f">Rechercher une infection</button>
-            <button class="btn btn-info btn-block my-4" type="submit" formaction="deconnexion.php" style="background-color:#4f798d ;box-shadow:2px 2px 5px #24363f">Déconnexion</button>
+                <button class="btn btn-info btn-block my-4" type="submit" formaction="formulaire.php" style="background-color:#4f798d ;box-shadow:2px 2px 5px #24363f">Ajouter une infection</button>
+                <button class="btn btn-info btn-block my-4" type="submit" formaction="recherche_infection.php" style="background-color:#4f798d ;box-shadow:2px 2px 5px #24363f">Rechercher une infection</button>
+                <button class="btn btn-info btn-block my-4" type="submit" formaction="deconnexion.php" style="background-color:#4f798d ;box-shadow:2px 2px 5px #24363f">Déconnexion</button>
             </div>
         </form>
         <br />

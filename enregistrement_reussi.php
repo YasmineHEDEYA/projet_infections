@@ -16,9 +16,13 @@ try {
 };
 $req = 'INSERT INTO infection (date_declaration,date_fin,type_inf,id_personnel,nip) VALUES 
 ("' . $_SESSION['date_declaration'] . '" , "' . $_SESSION['date_fin'] . '" , "' . $type . '" , ' . $_SESSION['id_personnel'] . ' , ' . $_SESSION['nip'] . ')';
-
+// requete insertion sur la table infection
+// contient un trigger qui va remplir la table infection_source ou
+// infection_cible avec l'identifiant et les données déja saisies sur la table mère
 $resultat = $bdd->query($req);
 $req2 = 'SELECT LAST_INSERT_ID()';
+// avoir l'id de la dernère infection ajoutée pour pouvoir modifier la ligne
+// dans la table spécifique avec les données manquantes lors du 1er ajout
 if ($type == 'cible')
     $req3 = 'update infection_cible set transmission="' . $_SESSION['mode_transmission'] . '", id_inf_INFECTION_SOURCE=' . $_SESSION['nip_source'] . ', id_personnel=' . $_SESSION['id_personnel'] . ', nip=' . $_SESSION['nip'] . ' where id_inf=(' . $req2 . ')';
 else

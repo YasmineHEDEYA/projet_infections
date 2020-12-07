@@ -89,7 +89,7 @@
               <br/>
             <p class="float-sm-left">* Information requise</p>
             <br />
-            <div class="h-captcha" data-sitekey="b79d465d-7901-47ce-b505-3a741e73d2f0"></div>
+            <div class="h-captcha " data-sitekey="b79d465d-7901-47ce-b505-3a741e73d2f0"></div>
             <button class="btn btn-info btn-block my-4" type="submit" style="background-color:#4f798d ;box-shadow:2px 2px 5px #24363f">Se connecter</button>
         </form>
         <br />

@@ -12,14 +12,16 @@ try {
 };
 $req = $bdd->prepare('SELECT nip FROM patient join est_hospitalise using(nip)
 join `service` using(id_service) WHERE nip like :p_nip and id_service like :p_service');
+
 $req->execute(array('p_nip' => $_SESSION['nip'], 'p_service' => $_POST['service']));
 $ligne = $req->fetch();
 
- if ($ligne && $_POST['service']!='Service*') {
+ if ($ligne && $_POST['service']!='Service*' && strlen($_POST['date_declaration'])!=0 ) {
          header('Location: ajouter_infection_suite_2.php');
          exit();
  } else {
          header('Location: patient_introuvable.php');
     exit();
  }
+ 
 ?>

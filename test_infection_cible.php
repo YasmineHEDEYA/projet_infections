@@ -25,12 +25,13 @@ $_SESSION['nature_infection']='';
 $_SESSION['cause_infection']='';
 $_SESSION['mode_transmission']=$_POST['mode_transmission'];
 $_SESSION['nip_source']=$_POST['nip_source'];
-if($_SESSION['mode_transmission']!= htmlspecialchars($_SESSION['mode_transmission'])|| $_SESSION['nip_source']!= htmlspecialchars($_SESSION['nip_source'])||!$test){
-
+if($_SESSION['mode_transmission']!= htmlspecialchars($_SESSION['mode_transmission'])|| $_SESSION['nip_source']!= htmlspecialchars($_SESSION['nip_source'])||!$test||strlen($_SESSION['nip_source'])==0 || strlen($_SESSION['mode_transmission'])==0){
+//eviter les injections sql
+//strlen($_SESSION[])==0 permet d'eviter d'entrer des données manquantes qui peuvent poser un pb dans la base de données
+// si quelqu'un fait une inspection de la page à partir du navigateur et s'amuse à enlever le "required" dans les balises
     header('Location: erreur_saisie_infection_cible.php');
 exit();
 } else {
 header('Location: confirmation_enregistrement.php');
 exit();
 }
-?>

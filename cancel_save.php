@@ -7,4 +7,3 @@ header('Location: infection_source.php');
      header('Location: infection_cible.php');
      exit();
  }
-?>

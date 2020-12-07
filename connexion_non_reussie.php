@@ -12,21 +12,21 @@
             margin-top: 10vh;
             margin-bottom: 10vh;
         }
-        
+
         input.form-control {
             box-shadow: 2px 2px 5px #24363f;
         }
-        
+
         h5,
         label {
             color: #dae3e6;
         }
-        
+
         p {
             color: white;
             font-size: 0.8em;
         }
-        
+
         body {
             background-image: url("inf.jpeg");
             background-repeat: no-repeat;
@@ -34,7 +34,6 @@
             background-position: center;
             height: 100%;
         }
-        
     </style>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
@@ -45,20 +44,21 @@
 
 <body>
 
-   
+
     <div class="col-md-4 offset-md-4">
 
         <form class="text-center p-4" action="login.php">
             <p class="h2 mb-2" style="color:#93acb9; text-shadow: 2px 2px 5px#24363f">Connexion non réussie</p>
             <br />
-            <br/>
+            <br />
             <h5 style="text-shadow: 2px 2px 5px #24363f">Vérifiez votre identifiant et mot de passe</h5>
+            <h5 style="text-shadow: 2px 2px 5px #24363f">Vérifiez que vous êtes bien un humain</h5>
             <h5 style="text-shadow: 2px 2px 5px #24363f">N'oubliez pas de sélectionner un centre!</h5>
-            <br/>
+            <br />
             <img src="emoji.png" width=150em height=150em>
             <button class="btn btn-info btn-block my-4" type="submit" style="background-color:#4f798d ;box-shadow:2px 2px 5px #24363f">Réessayer</button>
         </form>
-       <br/>
+        <br />
     </div>
 
 </body>
