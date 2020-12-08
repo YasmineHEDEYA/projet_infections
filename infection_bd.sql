@@ -1,0 +1,1553 @@
+-- phpMyAdmin SQL Dump
+-- version 5.0.2
+-- https://www.phpmyadmin.net/
+--
+-- Host: 127.0.0.1:3306
+-- Generation Time: Dec 06, 2020 at 05:18 PM
+-- Server version: 8.0.21
+-- PHP Version: 7.3.21
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Database: `infection`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `centre_hospitalier`
+--
+
+DROP TABLE IF EXISTS `centre_hospitalier`;
+CREATE TABLE IF NOT EXISTS `centre_hospitalier` (
+  `id_centre` int NOT NULL,
+  `nom_centre` varchar(150) NOT NULL,
+  PRIMARY KEY (`id_centre`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `centre_hospitalier`
+--
+
+INSERT INTO `centre_hospitalier` (`id_centre`, `nom_centre`) VALUES
+(1, 'Centre de l\'Est'),
+(2, 'Centre du Sud'),
+(3, 'Centre du Centre'),
+(4, 'Centre de l\'Ouest'),
+(5, 'Centre du Nord');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `demande`
+--
+
+DROP TABLE IF EXISTS `demande`;
+CREATE TABLE IF NOT EXISTS `demande` (
+  `id_service` int NOT NULL,
+  `code_tnb` char(4) NOT NULL,
+  `date_bio` date NOT NULL,
+  KEY `SERVICE_FK` (`id_service`) USING BTREE,
+  KEY `ACTE_FK` (`code_tnb`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `effectue`
+--
+
+DROP TABLE IF EXISTS `effectue`;
+CREATE TABLE IF NOT EXISTS `effectue` (
+  `id_service` int NOT NULL,
+  `code_ccam` varchar(7) NOT NULL,
+  KEY `SERVICE_FK` (`id_service`) USING BTREE,
+  KEY `ACTE_FK` (`code_ccam`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `est_hospitalise`
+--
+
+DROP TABLE IF EXISTS `est_hospitalise`;
+CREATE TABLE IF NOT EXISTS `est_hospitalise` (
+  `id_service` int NOT NULL,
+  `nip` int NOT NULL,
+  `date_entree` date NOT NULL,
+  `date_sortie` date DEFAULT NULL,
+  `etat_sante_sortie` tinyint DEFAULT NULL,
+  `fr` tinyint(1) DEFAULT NULL,
+  KEY `SERVICE_FK` (`id_service`) USING BTREE,
+  KEY `PATIENT_FK` (`nip`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `est_hospitalise`
+--
+
+INSERT INTO `est_hospitalise` (`id_service`, `nip`, `date_entree`, `date_sortie`, `etat_sante_sortie`, `fr`) VALUES
+(1, 205094, '2020-11-01', '2020-12-17', NULL, NULL),
+(1, 205094, '2020-12-01', '2020-12-18', NULL, NULL),
+(1, 205471, '2020-09-14', '2020-12-04', NULL, NULL),
+(2, 205471, '2020-07-06', '2020-09-11', NULL, NULL),
+(10, 208282, '2020-02-05', '2020-04-10', NULL, NULL),
+(11, 209005, '2020-02-23', '2020-03-18', NULL, NULL),
+(14, 209219, '2020-07-15', '2020-08-31', NULL, NULL),
+(15, 205094, '2019-09-01', '2019-09-19', NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `infection`
+--
+
+DROP TABLE IF EXISTS `infection`;
+CREATE TABLE IF NOT EXISTS `infection` (
+  `id_inf` int NOT NULL AUTO_INCREMENT,
+  `date_declaration` date NOT NULL,
+  `date_fin` date DEFAULT NULL,
+  `type_inf` enum('source','cible') NOT NULL,
+  `id_personnel` int NOT NULL,
+  `nip` int NOT NULL,
+  PRIMARY KEY (`id_inf`),
+  KEY `INFECTION_PERSONNEL_FK` (`id_personnel`),
+  KEY `INFECTION_PATIENT0_FK` (`nip`)
+) ENGINE=InnoDB AUTO_INCREMENT=52 DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `infection`
+--
+
+INSERT INTO `infection` (`id_inf`, `date_declaration`, `date_fin`, `type_inf`, `id_personnel`, `nip`) VALUES
+(48, '2020-12-26', '2021-01-08', 'source', 1, 205094),
+(49, '2020-12-12', '0000-00-00', 'source', 1, 205094),
+(50, '2020-12-12', '0000-00-00', 'source', 1, 205094),
+(51, '2020-12-19', '0000-00-00', 'cible', 1, 205094);
+
+--
+-- Triggers `infection`
+--
+DROP TRIGGER IF EXISTS `insertion_infection`;
+DELIMITER $$
+CREATE TRIGGER `insertion_infection` AFTER INSERT ON `infection` FOR EACH ROW if new.type_inf='source'then insert into infection_source ( id_inf,date_declaration,date_fin,type_inf) values(new.id_inf,new.date_declaration,new.date_fin, new.type_inf);
+else insert into infection_cible ( id_inf,date_declaration,date_fin,type_inf) values(new.id_inf,new.date_declaration,new.date_fin, new.type_inf);
+end if
+$$
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `infection_cible`
+--
+
+DROP TABLE IF EXISTS `infection_cible`;
+CREATE TABLE IF NOT EXISTS `infection_cible` (
+  `id_inf` int NOT NULL,
+  `transmission` varchar(100) CHARACTER SET latin1 COLLATE latin1_swedish_ci DEFAULT NULL,
+  `date_declaration` date NOT NULL,
+  `date_fin` date DEFAULT NULL,
+  `type_inf` enum('source','cible') NOT NULL,
+  `id_inf_INFECTION_SOURCE` int NOT NULL,
+  `id_personnel` int NOT NULL,
+  `nip` int NOT NULL,
+  PRIMARY KEY (`id_inf`),
+  KEY `INFECTION_CIBLE_INFECTION_SOURCE0_FK` (`id_inf_INFECTION_SOURCE`),
+  KEY `INFECTION_CIBLE_PERSONNEL1_FK` (`id_personnel`),
+  KEY `INFECTION_CIBLE_PATIENT2_FK` (`nip`),
+  KEY `id_inf` (`id_inf`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `infection_cible`
+--
+
+INSERT INTO `infection_cible` (`id_inf`, `transmission`, `date_declaration`, `date_fin`, `type_inf`, `id_inf_INFECTION_SOURCE`, `id_personnel`, `nip`) VALUES
+(51, 'dfnw', '2020-12-19', '0000-00-00', 'cible', 205471, 1, 205094);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `infection_source`
+--
+
+DROP TABLE IF EXISTS `infection_source`;
+CREATE TABLE IF NOT EXISTS `infection_source` (
+  `id_inf` int NOT NULL,
+  `nature` enum('endogene','exogene') CHARACTER SET latin1 COLLATE latin1_swedish_ci DEFAULT NULL,
+  `cause` varchar(100) CHARACTER SET latin1 COLLATE latin1_swedish_ci DEFAULT NULL,
+  `date_declaration` date NOT NULL,
+  `date_fin` date DEFAULT NULL,
+  `type_inf` enum('source','cible') NOT NULL,
+  `id_personnel` int NOT NULL,
+  `nip` int NOT NULL,
+  PRIMARY KEY (`id_inf`),
+  KEY `INFECTION_SOURCE_PERSONNEL0_FK` (`id_personnel`),
+  KEY `INFECTION_SOURCE_PATIENT1_FK` (`nip`),
+  KEY `id_inf` (`id_inf`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `infection_source`
+--
+
+INSERT INTO `infection_source` (`id_inf`, `nature`, `cause`, `date_declaration`, `date_fin`, `type_inf`, `id_personnel`, `nip`) VALUES
+(48, 'exogene', '', '2020-12-26', '2021-01-08', 'source', 1, 205094),
+(49, 'exogene', '', '2020-12-12', '0000-00-00', 'source', 1, 205094),
+(50, 'exogene', 'fdbw', '2020-12-12', '0000-00-00', 'source', 1, 205094);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `instrument`
+--
+
+DROP TABLE IF EXISTS `instrument`;
+CREATE TABLE IF NOT EXISTS `instrument` (
+  `id_instru` int NOT NULL AUTO_INCREMENT,
+  `nom_instru` varchar(50) NOT NULL,
+  PRIMARY KEY (`id_instru`)
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `instrument`
+--
+
+INSERT INTO `instrument` (`id_instru`, `nom_instru`) VALUES
+(1, 'lame bistouri'),
+(2, 'Pince'),
+(3, 'forceps'),
+(4, 'ecarteur'),
+(5, 'davier'),
+(6, 'Ciseau'),
+(7, 'plaque cento-médullaire'),
+(8, 'Plaque visée'),
+(9, 'Pince D.');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `medecin`
+--
+
+DROP TABLE IF EXISTS `medecin`;
+CREATE TABLE IF NOT EXISTS `medecin` (
+  `ID_personnel` int NOT NULL,
+  `spe_med` varchar(50) NOT NULL,
+  `nom_pers` varchar(80) NOT NULL,
+  `prenom_pers` varchar(100) NOT NULL,
+  `fonction_pers` varchar(80) CHARACTER SET latin1 COLLATE latin1_swedish_ci DEFAULT NULL,
+  `sexe_pers` tinyint(1) DEFAULT NULL,
+  PRIMARY KEY (`ID_personnel`),
+  KEY `ID_personnel` (`ID_personnel`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `medecin`
+--
+
+INSERT INTO `medecin` (`ID_personnel`, `spe_med`, `nom_pers`, `prenom_pers`, `fonction_pers`, `sexe_pers`) VALUES
+(1, 'Medecin Dentiste', 'Hedeya', 'Yasmine', 'Médecin dentiste', NULL),
+(3, 'Médecin', 'AWUKLU', 'Yvon', 'Médecin', NULL),
+(6, 'Médecin', 'Kiewsky', 'Valérie', NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `patient`
+--
+
+DROP TABLE IF EXISTS `patient`;
+CREATE TABLE IF NOT EXISTS `patient` (
+  `nip` int NOT NULL,
+  `nom_pat` varchar(80) NOT NULL,
+  `prenoms_pat` varchar(100) NOT NULL,
+  `date_naiss_pat` date NOT NULL,
+  PRIMARY KEY (`nip`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `patient`
+--
+
+INSERT INTO `patient` (`nip`, `nom_pat`, `prenoms_pat`, `date_naiss_pat`) VALUES
+(205094, 'ROOBON', 'MADELEINE', '2018-01-01'),
+(205471, 'BLNAUD', 'JEAN-CLAUD', '1984-11-10'),
+(207977, 'AR-RUL', 'ERIC', '2010-08-08'),
+(208282, 'LAETTE', 'MARIE-ANGE', '1957-02-22'),
+(209005, 'SALEGO', 'MARIE', '1991-11-29'),
+(209219, 'AMNCAN', 'LIONEL', '1995-04-08');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `personnel`
+--
+
+DROP TABLE IF EXISTS `personnel`;
+CREATE TABLE IF NOT EXISTS `personnel` (
+  `id_personnel` int NOT NULL AUTO_INCREMENT,
+  `nom_pers` varchar(80) NOT NULL,
+  `prenom_pers` varchar(100) NOT NULL,
+  `fonction_pers` varchar(80) CHARACTER SET latin1 COLLATE latin1_swedish_ci DEFAULT NULL,
+  `sexe_pers` tinyint(1) DEFAULT NULL,
+  PRIMARY KEY (`id_personnel`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `personnel`
+--
+
+INSERT INTO `personnel` (`id_personnel`, `nom_pers`, `prenom_pers`, `fonction_pers`, `sexe_pers`) VALUES
+(1, 'Hedeya', 'Yasmine', 'Médecin dentiste', NULL),
+(2, 'Chemli', 'Eya', 'Pharmacien', NULL),
+(3, 'AWUKLU', 'Yvon', 'Médecin', NULL),
+(4, 'Baraka', 'Samia', NULL, NULL),
+(5, 'Rohée', 'Céline', NULL, NULL),
+(6, 'Kiewsky', 'Valérie', NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `realise`
+--
+
+DROP TABLE IF EXISTS `realise`;
+CREATE TABLE IF NOT EXISTS `realise` (
+  `code_ccam` varchar(7) NOT NULL,
+  `id_instru` int NOT NULL,
+  `id_personnel` int NOT NULL,
+  `date_debut_acte` datetime NOT NULL,
+  `date_fin_acte` datetime NOT NULL,
+  KEY `INSTRUMENT_FK` (`id_instru`) USING BTREE,
+  KEY `PERSONNEL_FK` (`id_personnel`) USING BTREE,
+  KEY `ACTE_FK` (`code_ccam`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `service`
+--
+
+DROP TABLE IF EXISTS `service`;
+CREATE TABLE IF NOT EXISTS `service` (
+  `id_service` int NOT NULL,
+  `nom_service` varchar(100) NOT NULL,
+  `spe_service` varchar(80) NOT NULL,
+  `id_site` int NOT NULL,
+  PRIMARY KEY (`id_service`),
+  KEY `SERVICE_SITE_FK` (`id_site`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `service`
+--
+
+INSERT INTO `service` (`id_service`, `nom_service`, `spe_service`, `id_site`) VALUES
+(1, 'service chirurgie maxillo faciale et esthétique', 'chirurgie', 1),
+(2, 'Réné Fra', 'Odontologie', 4),
+(3, 'Bret Samuel', 'Pneumologie', 9),
+(10, 'Marie curie', 'médecine nucleaire', 10),
+(11, 'Cousteau', 'Cardiologie', 6),
+(14, 'maladies infectieuses', 'infectiologie', 12),
+(15, 'entero-gastrologie', 'gastrologie', 13),
+(16, 'pneumologie', 'pneumologie', 14),
+(21, 'Simone Veil', 'Gynécologie', 9),
+(25, 'pneumologie', 'pneumologie', 13),
+(26, 'les champions', 'pédiatrie', 11),
+(33, 'chirurgie générale', 'chirurgie générale', 12),
+(45, 'Paul Sabatier', 'Infectiologie', 6),
+(65, 'Pierre Marie', 'Ophtalmologie', 1),
+(96, 'Cousteau', 'Médecine interne', 4),
+(144, 'Gynécologie', 'gynécologie', 14);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `site`
+--
+
+DROP TABLE IF EXISTS `site`;
+CREATE TABLE IF NOT EXISTS `site` (
+  `id_site` int NOT NULL AUTO_INCREMENT,
+  `nom_site` varchar(50) NOT NULL,
+  `num` smallint NOT NULL,
+  `rue` varchar(80) NOT NULL,
+  `complement` varchar(50) DEFAULT NULL,
+  `code_postal` mediumint NOT NULL,
+  `ville` varchar(80) NOT NULL,
+  `id_centre` int NOT NULL,
+  PRIMARY KEY (`id_site`),
+  KEY `SITE_CENTRE_HOSPITALIER_FK` (`id_centre`)
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `site`
+--
+
+INSERT INTO `site` (`id_site`, `nom_site`, `num`, `rue`, `complement`, `code_postal`, `ville`, `id_centre`) VALUES
+(1, 'Site Sara', 25, 'Palmier', NULL, 20336, 'Strasbourg', 1),
+(4, 'Site Avicennes', 85, 'Charles', NULL, 15653, 'Aix', 3),
+(6, 'Site Delmas', 12, 'Avenue Rousseau', NULL, 28000, 'Colmar', 5),
+(9, 'Site Pasteur', 78, 'Guidotti', NULL, 60000, 'Nice', 2),
+(10, 'Site des Jasmins', 3, 'victor Hugo', NULL, 26000, 'Lyon', 1),
+(11, 'Site Avicenne', 1, 'Jean jaurès', NULL, 75000, 'Paris', 1),
+(12, 'Site Marie Curie', 11, 'Marie Curie', NULL, 45600, 'Clermont Ferrand', 3),
+(13, 'Site Rosa Parks', 6, 'rue des menuts', NULL, 10120, 'Poitier', 4),
+(14, 'Site Carreire', 146, 'Rue Léo Saignat', NULL, 33000, 'Bordeaux', 4);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ths_acte`
+--
+
+DROP TABLE IF EXISTS `ths_acte`;
+CREATE TABLE IF NOT EXISTS `ths_acte` (
+  `code_ccam` varchar(7) NOT NULL,
+  `libelle_acte` text NOT NULL,
+  PRIMARY KEY (`code_ccam`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `ths_acte`
+--
+
+INSERT INTO `ths_acte` (`code_ccam`, `libelle_acte`) VALUES
+('AAFA001', 'Exérèse de tumeur intraparenchymateuse du cervelet, par craniotomie'),
+('AAFA002', 'Exérèse de tumeur intraparenchymateuse du cerveau, par craniotomie'),
+('AAFA003', 'Exérèse de lésion du tronc cérébral, par craniotomie'),
+('AAJA001', 'Évacuation de collection intracérébrale, par craniotomie'),
+('AAJA002', 'Évacuation d\'hématome intracérébral traumatique [contusion], par craniotomie'),
+('AAJA004', 'Évacuation d\'hématome intracérébral non traumatique, par craniotomie'),
+('AAJA006', 'Parage de plaie craniocérébrale'),
+('AAJH002', 'Évacuation d\'hématome intracérébral non traumatique, par voie transcrânienne avec guidage scanographique'),
+('AAQM002', 'Échographie transfontanellaire de l\'encéphale'),
+('AAQP002', 'Électroencéphalographie continue ambulatoire sur au moins 8 dérivations, pendant au moins 24 heures [Holter EEG]'),
+('AAQP003', 'Surveillance électroencéphalographique continue sans enregistrement vidéo, par 24 heures'),
+('AAQP005', 'Surveillance électrocorticographique peropératoire de l\'activité encéphalique spontanée et/ou provoquée'),
+('AAQP006', 'Électroencéphalographie de longue durée de 1 à 4 heures sur au moins 8 dérivations, avec enregistrement vidéo'),
+('AAQP007', 'Électroencéphalographie sur au moins 8 dérivations, avec enregistrement d\'une durée minimale de 20 minutes'),
+('AAQP010', 'Électroencéphalographie de longue durée de plus de 4 heures sur au moins 8 dérivations, avec enregistrement vidéo'),
+('AAQP011', 'Électroencéphalographie sur au moins 8 dérivations avec enregistrement d\'une durée minimale de 20 minutes, au lit du malade'),
+('AAQP012', 'Surveillance électroencéphalographique continue avec enregistrement vidéo, par 24 heures'),
+('ABCA002', 'Dérivation péritonéale ou atriale du liquide cérébrospinal ventriculaire, par abord direct'),
+('ABCB001', 'Dérivation externe du liquide cérébrospinal ventriculaire ou subdural, par voie transcrânienne'),
+('ABFA008', 'Exérèse de tumeur de la tente du cervelet, par craniotomie'),
+('ABGA001', 'Ablation d\'un capteur de pression intracrânienne'),
+('ABGA004', 'Ablation d\'une dérivation externe du liquide cérébrospinal'),
+('ABJA002', 'Évacuation d\'un hématome subdural aigu, par craniotomie'),
+('ABJA003', 'Évacuation d\'un hématome subdural chronique unilatéral, par craniotomie'),
+('ABJA005', 'Évacuation d\'un hématome extradural supratentoriel, par craniotomie'),
+('ABJA006', 'Évacuation d\'un hématome subdural chronique bilatéral, par craniotomie'),
+('ABLB003', 'Pose d\'un capteur extraventriculaire de pression intracrânienne, par voie transcrânienne'),
+('ABQP001', 'Surveillance continue de la pression intracrânienne, par 24 heures'),
+('ACFA004', 'Exérèse de tumeur du clivus, par craniotomie'),
+('ACFA007', 'Exérèse de tumeur de l\'angle pontocérébelleux et/ou du méat auditif interne [conduit auditif interne], par abord translabyrinthique'),
+('ACFA008', 'Exérèse de tumeur extraparenchymateuse de la convexité du cervelet sans atteinte de sinus veineux dural, par craniotomie'),
+('ACFA010', 'Exérèse de tumeur de l\'angle pontocérébelleux et/ou du méat auditif interne [conduit auditif interne], par abord infraoccipital rétrosigmoïdien'),
+('ACFA020', 'Exérèse de tumeur du clivus, par abord transoral ou nasosphénoïdal'),
+('ACFA027', 'Exérèse de tumeur de l\'angle pontocérébelleux et/ou du méat auditif interne [conduit auditif interne], par abord transotique'),
+('ACHA002', 'Biopsie de lésion intracrânienne, par craniotomie'),
+('ACHB001', 'Biopsie de lésion intracrânienne, par voie transcrânienne stéréotaxique'),
+('ACQH003', 'Scanographie du crâne et de son contenu, avec injection intraveineuse de produit de contraste'),
+('ACQJ002', 'Remnographie [IRM] du crâne et de son contenu, avec injection intraveineuse de produit de contraste'),
+('ACQK001', 'Scanographie du crâne et de son contenu, sans injection de produit de contraste'),
+('ACQN001', 'Remnographie [IRM] du crâne et de son contenu, sans injection intraveineuse de produit de contraste'),
+('ACQP001', 'Repérage d\'une structure nerveuse et guidage peropératoires assistés par ordinateur [Neuronavigation]'),
+('ADEA002', 'Autogreffe du nerf facial extrapétreux'),
+('ADQB007', 'Mesure du réflexe trigéminopalpébral [réflexe de clignement] [Blink test] et/ou du réflexe massétérin'),
+('AEQM001', 'Échographie transcutanée de la moelle épinière'),
+('AFHB002', 'Ponction de liquide cérébrospinal, par voie lombaire transcutanée [Ponction lombaire]'),
+('AFJB002', 'Évacuation de liquide cérébrospinal, par voie transcutanée lombaire'),
+('AFLB001', 'Injection péridurale [épidurale] de sang autologue [Blood patch]'),
+('AFLB003', 'Séance d\'injection intrathécale d\'agent pharmacologique anticancéreux, par voie transcutanée'),
+('AFLB004', 'Pose d\'un cathéter intrathécal spinal par voie lombaire transcutanée, avec mesure instantanée de la pression du liquide cérébrospinal et tests dynamiques'),
+('AFLB006', 'Injection intrathécale d\'agent pharmacologique à visée thérapeutique, par voie transcutanée sans guidage'),
+('AFLB008', 'Pose d\'un cathéter péridural [épidural], par voie transcutanée'),
+('AFLB010', 'Anesthésie rachidienne au cours d\'un accouchement par voie basse'),
+('AFLF006', 'Administration péridurale [épidurale] d\'agent pharmacologique au long cours par un dispositif implanté, par 24 heures'),
+('AFPA001', 'Mise à plat de lésion infectieuse péridurale rachidienne et/ou paravertébrale postopératoire [sepsis]'),
+('AFSA001', 'Fermeture d\'un spina bifida avec myéloméningocèle, par abord postérieur'),
+('AGLB001', 'Injection péridurale [épidurale] de substance à visée antalgique, avec évaluation diagnostique et pronostique'),
+('AGMA001', 'Réparation de perte de substance durale de plus de 10cm² par greffe ou substitut au cours d\'une intervention intracrânienne ou intrarachidienne'),
+('AGQP004', 'Surveillance peropératoire des potentiels évoqués moteurs, sensoriels ou somesthésiques, pendant plus de 4 heures'),
+('AGQP005', 'Surveillance peropératoire des potentiels évoqués moteurs, sensoriels ou somesthésiques pendant 2 à 4 heures'),
+('AHCA006', 'Suture de plaies du nerf médian et du nerf ulnaire au poignet, par abord direct'),
+('AHFA004', 'Exérèse de tumeur d\'un nerf spinal sans rétablissement de continuité, par abord direct'),
+('AHHA002', 'Biopsie neuromusculaire, par abord direct'),
+('AHLH002', 'Infiltration thérapeutique du plexus lombosacré, avec guidage radiologique'),
+('AHLH009', 'Infiltration anesthésique d\'un tronc nerveux profond avec guidage radiologique, avec évaluation diagnostique et pronostique'),
+('AHLH016', 'Infiltration anesthésique du plexus lombosacré avec guidage radiologique, avec évaluation diagnostique et pronostique'),
+('AHPA004', 'Libération du plexus brachial avec scalénotomie, par abord supraclaviculaire'),
+('AHPA017', 'Libération du nerf fémoral [crural], du nerf sciatique ou de leurs branches à la racine du membre inférieur ou à la cuisse, par abord direct'),
+('AHPA022', 'Libération du nerf ulnaire au coude, par abord direct'),
+('AHQB007', 'Électromyographie de stimulodétection peropératoire, pendant 2 à 4 heures'),
+('AHQB009', 'Mesure des vitesses de la conduction sensitive et de l\'amplitude du potentiel sensitif de plus de 4 nerfs'),
+('AHQB010', 'Mesure des vitesses de conduction motrice et de l\'amplitude des réponses musculaires de plus de 4 nerfs, sans étude de la conduction proximale'),
+('AHQB011', 'Mesure des vitesses de la conduction sensitive et de l\'amplitude du potentiel sensitif de 2 à 4 nerfs'),
+('AHQB012', 'Électromyographie de stimulodétection peropératoire, pendant moins de 2 heures'),
+('AHQB013', 'Électromyographie de plus de 6 muscles striés au repos et à l\'effort, par électrode aiguille'),
+('AHQB016', 'Électromyographie analytique du périnée, avec étude des latences des réflexes sacrés, de la vitesse de conduction sensitive du nerf dorsal du pénis, des potentiels évoqués somesthésiques cérébraux et des réponses cutanées sympathiques périnéales'),
+('AHQB022', 'Mesure des vitesses de conduction motrice et de l\'amplitude des réponses musculaires de plus de 4 nerfs, avec étude de la conduction proximale sur au moins 4 nerfs'),
+('AHQB023', 'Mesure des vitesses de conduction motrice et de l\'amplitude des réponses musculaires de 2 à 4 nerfs, avec étude de la conduction proximale sur au moins 2 nerfs'),
+('AHQB024', 'Électromyographie de 3 à 6 muscles striés au repos et à l\'effort sans stimulodétection, par électrode aiguille'),
+('AHQB025', 'Électromyographie de 1 ou 2 muscles striés au repos et à l\'effort avec stimulodétection, par électrode aiguille'),
+('AHQB026', 'Électromyographie de 3 à 6 muscles striés au repos et à l\'effort avec stimulodétection, par électrode aiguille'),
+('AHQB027', 'Électromyographie de 1 ou 2 muscles striés au repos et à l\'effort sans stimulodétection, par électrode aiguille'),
+('AHQP003', 'Mesure des vitesses de conduction motrice et de l\'amplitude des réponses musculaires de 2 à 4 nerfs, sans étude de la conduction proximale, par électrode de surface'),
+('AHQP004', 'Enregistrement des potentiels évoqués moteurs par stimulation corticale et/ou spinale'),
+('AJQP001', 'Mesure des réponses cutanées sympathiques par électrode de surface'),
+('AMQP004', 'Hypnographie de 8 à 12 heures, avec enregistrement vidéo'),
+('AMQP007', 'Hypnographie de 8 à 12 heures, sans enregistrement vidéo'),
+('AMQP009', 'Évaluation diurne de la vigilance ou de l\'endormissement par épreuves itératives'),
+('ANMP001', 'Initialisation et surveillance d\'une analgésie contrôlée par le patient [ACP]'),
+('ANQP006', 'Enregistrement des potentiels évoqués somesthésiques cérébraux par stimulation des nerfs des membres supérieurs et inférieurs'),
+('AZQP002', 'Enregistrement de potentiels évoqués, au lit du malade'),
+('BACA003', 'Suture partielle ou totale des bords libres des paupières supérieure et inférieure'),
+('BAFA013', 'Exérèse de chalazion'),
+('BCCA001', 'Suture de plaie de la conjonctive'),
+('BCFA008', 'Exérèse de lésion de la conjonctive, sans autogreffe'),
+('BCPA001', 'Incision de la conjonctive'),
+('BDCA003', 'Suture d\'une plaie linéaire non transfixiante de la cornée'),
+('BDMA006', 'Conjonctivokératoplastie par greffe de membrane amniotique humaine'),
+('BDMA007', 'Kératoplastie transfixiante [Transplantation cornéenne transfixiante]'),
+('BEFA008', 'Trabéculectomie [Sclérectomie transfixiante]'),
+('BEJB002', 'Évacuation de collection de la chambre antérieure de l\'oeil, par voie transsclérale, sans irrigation-aspiration automatisée'),
+('BELB001', 'Injection de substance inerte ou organique dans la chambre antérieure de l\'oeil, par voie transsclérale [Reformation de la chambre antérieure]'),
+('BEPA004', 'Iridotomie ou iridectomie périphérique ou sectorielle sans laser'),
+('BFGA002', 'Extraction extracapsulaire manuelle du cristallin, avec implantation de cristallin artificiel dans la chambre postérieure'),
+('BGBA002', 'Tamponnement intraoculaire provisoire par utilisation peropératoire de perfluorocarbones'),
+('BGDA001', 'Rétinopexie par coagulation par cryoapplication ou par laser extraoculaire avec indentation sclérale sur plus d\'un quadrant, avec tamponnement interne par gaz'),
+('BGFA010', 'Vitrectomie par sclérotomie postérieure, avec coagulation de la rétine et tamponnement interne provisoire'),
+('BGGA005', 'Ablation d\'huile de silicone intravitréenne'),
+('BGJA002', 'Évacuation de liquide sousrétinien, par rétinotomie'),
+('BGLB001', 'Injection d\'agent pharmacologique dans le vitré'),
+('BGMA001', 'Intervention rétinovitréenne associant une indentation et au moins 4 des actes suivants : coagulation, vitrectomie, endocoagulation au laser, rétinotomie, tamponnement interne, échange fluide-gaz, dissection de brides'),
+('BGMA002', 'Intervention rétinovitréenne associant au moins 4 des actes suivants : coagulation, vitrectomie, endocoagulation au laser, rétinotomie, tamponnement interne, échange fluide-gaz, dissection de brides, rétinectomie'),
+('BHGA001', 'Énucléation du bulbe [globe] oculaire sans insertion d\'implant ni autogreffe'),
+('BLQP001', 'Enregistrement des potentiels évoqués visuels avec stimulation par flash lumineux'),
+('BLQP009', 'Enregistrement des potentiels évoqués visuels par inversion du stimulus de contraste'),
+('CAFA002', 'Exérèse partielle non transfixiante de l\'auricule'),
+('CBFA006', 'Exérèse de cholestéatome avec tympanoplastie en technique fermée'),
+('CBLD001', 'Pose bilatérale d\'aérateur transtympanique'),
+('CBLD003', 'Pose unilatérale d\'aérateur transtympanique'),
+('CBQA001', 'Exploration du cavum tympanique [caisse du tympan], avec décollement du lambeau tympanoméatal'),
+('CCLA002', 'Pose d\'un implant auditif à électrodes intracochléaires'),
+('DAAF003', 'Agrandissement d\'une communication interatriale, par voie veineuse transcutanée'),
+('DAFA003', 'Résection d\'un anévrisme de la paroi du ventricule du coeur, par thoracotomie avec CEC'),
+('DAFA006', 'Résection d\'un bourrelet musculaire infraaortique pour cardiomyopathie obstructive, par thoracotomie avec CEC'),
+('DAFA009', 'Exérèse d\'une tumeur du coeur, par thoracotomie avec CEC'),
+('DAGA001', 'Ablation de corps étranger ou exérèse de végétation ou de caillot intracavitaire cardiaque, par thoracotomie avec CEC'),
+('DAGF001', 'Ablation de corps étranger intracavitaire cardiaque ou intravasculaire, par voie vasculaire transcutanée'),
+('DAHF001', 'Biopsie de l\'endocarde et du myocarde, par voie vasculaire transcutanée'),
+('DAPA001', 'Interruption du canal artériel, par thoracotomie sans CEC'),
+('DAQJ002', 'Échocardiographie transthoracique continue avec épreuve pharmacologique de stress, pour étude de la viabilité et de l\'ischémie du myocarde'),
+('DAQJ003', 'Échocardiographie continue avec épreuve pharmacologique de stress pour étude de la viabilité du myocarde, par voie oesophagienne'),
+('DAQL008', 'Scintigraphie des cavités cardiaques au repos selon plusieurs incidences'),
+('DASA012', 'Fermeture d\'une communication interventriculaire sans pose d\'un conduit extracardiaque, par thoracotomie avec CEC'),
+('DBKA003', 'Remplacement de la valve aortique par bioprothèse sans armature, par thoracotomie avec CEC'),
+('DBKA006', 'Remplacement de la valve aortique par prothèse mécanique ou bioprothèse avec armature, par thoracotomie avec CEC'),
+('DBKA010', 'Remplacement de la valve atrioventriculaire gauche par prothèse mécanique ou bioprothèse avec armature, par thoracotomie avec CEC'),
+('DBMA002', 'Valvoplastie atrioventriculaire gauche, par thoracotomie avec CEC'),
+('DBMA007', 'Reconstruction de l\'anneau atrioventriculaire gauche avec valvoplastie, par thoracotomie avec CEC'),
+('DBMA013', 'Reconstruction de l\'anneau atrioventriculaire gauche avec remplacement de la valve par prothèse mécanique ou bioprothèse avec armature, par thoracotomie avec CEC'),
+('DCJA001', 'Drainage d\'une collection du péricarde, par thoracotomie ou par abord infraxiphoïdien'),
+('DCJB001', 'Drainage d\'une collection du péricarde, par voie transcutanée'),
+('DCMC001', 'Création de fenêtre péricardopleurale, par thoracoscopie'),
+('DDAF001', 'Dilatation intraluminale d\'un vaisseau coronaire sans pose d\'endoprothèse, par voie artérielle transcutanée'),
+('DDAF002', 'Dilatation intraluminale de 2 vaisseaux coronaires sans pose d\'endoprothèse, par voie artérielle transcutanée'),
+('DDAF003', 'Dilatation intraluminale de 3 vaisseaux coronaires ou plus avec pose d\'endoprothèse, par voie artérielle transcutanée'),
+('DDAF004', 'Dilatation intraluminale de 2 vaisseaux coronaires avec pose d\'endoprothèse, par voie artérielle transcutanée'),
+('DDAF006', 'Dilatation intraluminale d\'un vaisseau coronaire avec pose d\'endoprothèse, par voie artérielle transcutanée'),
+('DDMA003', 'Revascularisation coronaire par trois greffons artériels avec trois anastomoses distales, par thoracotomie avec CEC'),
+('DDMA005', 'Revascularisation coronaire par deux greffons artériels et par greffon veineux avec trois anastomoses distales, par thoracotomie avec CEC'),
+('DDMA007', 'Revascularisation coronaire par greffon veineux avec une anastomose distale, par thoracotomie avec CEC'),
+('DDMA011', 'Revascularisation coronaire par un greffon artériel et par greffon veineux avec deux anastomoses distales, par thoracotomie avec CEC'),
+('DDMA016', 'Revascularisation coronaire par greffon veineux avec trois anastomoses distales, par thoracotomie avec CEC'),
+('DDMA017', 'Revascularisation coronaire par un greffon artériel avec deux anastomoses distales, par thoracotomie avec CEC'),
+('DDMA018', 'Revascularisation coronaire par un greffon artériel et par greffon veineux avec trois anastomoses distales, par thoracotomie avec CEC'),
+('DDMA020', 'Revascularisation coronaire par deux greffons artériels avec deux anastomoses distales, par thoracotomie avec CEC'),
+('DDMA021', 'Revascularisation coronaire par un greffon artériel et par greffon veineux avec plus de trois anastomoses distales, par thoracotomie avec CEC'),
+('DDQF001', 'Échographie et/ou échographie-doppler intraartérielle coronaire, aortique ou rénale, au cours d\'un acte diagnostique ou thérapeutique par voie vasculaire transcutanée'),
+('DDQH001', 'Artériographie coronaire avec angiographie de plusieurs pontages coronaires, par voie artérielle transcutanée'),
+('DDQH002', 'Artériographie coronaire, par voie artérielle'),
+('DDQH005', 'Artériographie coronaire avec angiographie d\'un pontage coronaire, par voie artérielle transcutanée'),
+('DDQH007', 'Artériographie coronaire avec ventriculographie gauche et artériographie de l\'aorte suprasigmoïdienne, par voie artérielle transcutanée'),
+('DDQH008', 'Artériographie coronaire avec angiographie de plusieurs pontages coronaires, ventriculographie gauche et artériographie de l\'aorte suprasigmoïdienne, par voie artérielle transcutanée'),
+('DDRH001', 'Épreuve pharmacodynamique de provocation de spasme coronaire, au cours d\'une artériographie coronaire'),
+('DDSF001', 'Embolisation ou fermeture d\'une fistule ou d\'un anévrisme coronaire, par voie vasculaire transcutanée'),
+('DEGF003', 'Ablation de plusieurs sondes définitives de stimulation ou de défibrillation intracardiaque avec utilisation d\'un dispositif spécifique, par voie veineuse transcutanée'),
+('DELA001', 'Implantation d\'un stimulateur cardiaque avec pose d\'électrodes épicardiques atriale et ventriculaire, pour stimulation définitive'),
+('DELF001', 'Implantation d\'un stimulateur cardiaque définitif avec pose d\'une sonde dans le sinus coronaire et d\'une sonde intraatriale ou intraventriculaire droite par voie veineuse transcutanée'),
+('DELF002', 'Implantation d\'un défibrillateur cardiaque automatique, avec pose d\'une sonde intraatriale et d\'une sonde intraventriculaire droites, par voie veineuse transcutanée'),
+('DELF005', 'Implantation d\'un stimulateur cardiaque définitif avec pose d\'une sonde intraatriale et d\'une sonde intraventriculaire droites par voie veineuse transcutanée'),
+('DELF006', 'Pose d\'une sonde intraventriculaire droite et d\'une sonde dans le sinus coronaire ou l\'oreillette droite pour stimulation cardiaque temporaire, par voie veineuse transcutanée'),
+('DELF007', 'Implantation d\'un stimulateur cardiaque définitif avec pose d\'une sonde intraatriale ou intraventriculaire droite par voie veineuse transcutanée'),
+('DELF010', 'Implantation d\'un stimulateur cardiaque définitif avec pose d\'une sonde intraatriale et intraventriculaire droite unique par voie veineuse transcutanée'),
+('DELF011', 'Pose d\'une sonde intraventriculaire droite pour stimulation cardiaque temporaire, par voie veineuse transcutanée'),
+('DELF013', 'Implantation d\'un défibrillateur cardiaque automatique, avec pose d\'une sonde intraventriculaire droite par voie veineuse transcutanée'),
+('DELF014', 'Implantation d\'un défibrillateur cardiaque automatique, avec pose d\'une sonde intraatriale droite et de sonde dans le sinus coronaire, par voie veineuse transcutanée'),
+('DEMP001', 'Contrôle et réglage secondaire d\'un défibrillateur cardiaque par télétransmission'),
+('DEMP002', 'Contrôle et réglage secondaire d\'un stimulateur cardiaque par télétransmission'),
+('DENF001', 'Destruction de foyer arythmogène atrial droit par méthode physique, par voie veineuse transcutanée'),
+('DENF003', 'Destruction de foyer arythmogène atrial gauche par méthode physique, par voie veineuse transcutanée'),
+('DEQF001', 'Exploration électrophysiologique intracardiaque par sonde intracavitaire droite par voie veineuse transcutanée, avec manoeuvres provocatrices d\'une tachycardie à l\'étage ventriculaire'),
+('DEQF002', 'Exploration électrophysiologique intracardiaque par sonde intracavitaire droite par voie veineuse transcutanée, avec manoeuvres provocatrices d\'une tachycardie à l\'étage auriculaire et à l\'étage ventriculaire'),
+('DEQF003', 'Exploration électrophysiologique intracardiaque par sonde intracavitaire droite, par voie veineuse transcutanée'),
+('DEQF004', 'Exploration électrophysiologique intracardiaque par sonde intracavitaire droite par voie veineuse transcutanée, avec manoeuvres provocatrices d\'une tachycardie à l\'étage auriculaire'),
+('DEQF005', 'Exploration électrophysiologique intracardiaque par sondes intracavitaires droite et gauche par voie vasculaire transcutanée, avec manoeuvres provocatrices d\'une tachycardie'),
+('DEQP002', 'Électrocardiographie à haute amplification'),
+('DEQP003', 'Électrocardiographie sur 12 dérivations ou plus'),
+('DEQP004', 'Surveillance continue de l\'électrocardiogramme par oscilloscopie et/ou télésurveillance, par 24 heures'),
+('DEQP005', 'Électrocardiographie sur 2 dérivations ou plus, avec enregistrement continu pendant au moins 24 heures'),
+('DEQP007', 'Surveillance continue de l\'électrocardiogramme par oscilloscopie et/ou télésurveillance, avec surveillance continue de la pression intraartérielle et de la saturation artérielle en oxygène par méthodes non invasives, par 24 heures'),
+('DERP001', 'Déclenchement de fibrillation ventriculaire, pour contrôle et mesure du seuil de défibrillation chez un porteur de défibrillateur'),
+('DERP003', 'Choc électrique cardiaque externe [Cardioversion], en dehors de l\'urgence'),
+('DERP004', 'Choc électrique cardiaque externe [Cardioversion], en urgence'),
+('DERP005', 'Stimulation cardiaque temporaire, par voie veineuse transcutanée'),
+('DERP006', 'Épreuve d\'inclinaison [Tilt test] avec étude des variations de la pression intraartérielle et de la fréquence cardiaque'),
+('DFBA001', 'Cerclage de l\'artère pulmonaire, par thoracotomie sans CEC'),
+('DFQH001', 'Artériographie sélective du tronc et/ou des branches de l\'artère pulmonaire, par voie veineuse transcutanée'),
+('DGCA003', 'Pontage rétropéritonéal entre l\'aorte thoracique descendante et les artères fémorales, par abord direct'),
+('DGCA004', 'Pontage bifurqué aorto-bifémoral par laparotomie, avec clampage infrarénal'),
+('DGCA007', 'Pontage aortoaortique infrarénal par laparotomie, avec clampage infrarénal'),
+('DGCA032', 'Pontage entre l\'aorte et le tronc artériel brachiocéphalique, par thoracotomie'),
+('DGGA003', 'Ablation de prothèse de l\'aorte abdominale avec pontage aorto-bisiliaque ou aorto-bifémoral, par laparotomie'),
+('DGKA003', 'Remplacement de l\'aorte thoracique ascendante, avec réimplantation des artères coronaires, par thoracotomie avec CEC'),
+('DGKA015', 'Remplacement de l\'aorte thoracique ascendante par tube valvulé, avec réimplantation des artères coronaires, par thoracotomie avec CEC'),
+('DGKA025', 'Remplacement de l\'aorte thoracique ascendante, sans réimplantation des artères coronaires, par thoracotomie avec CEC'),
+('DGLF003', 'Pose d\'endoprothèse couverte dans l\'aorte thoracique, par voie artérielle transcutanée'),
+('DGLF005', 'Pose d\'endoprothèse couverte rectiligne dans l\'aorte abdominale, par voie artérielle transcutanée'),
+('DGLF006', 'Pose d\'un ballon de contrepulsion diastolique intraaortique, par voie artérielle transcutanée'),
+('DGMA012', 'Correction d\'une interruption de l\'aorte thoracique horizontale sans prothèse, par thoracotomie avec CEC'),
+('DGPA005', 'Mise à plat d\'un anévrisme aortique infrarénal avec pontage aortoaortique infrarénal par laparotomie, avec clampage infrarénal'),
+('DGQH001', 'Artériographie globale de l\'aorte abdominale et des membres inférieurs, par voie artérielle transcutanée'),
+('DGQH007', 'Artériographie globale de la crosse de l\'aorte et de ses branches cervicocéphaliques [Gerbe aortique], par voie artérielle transcutanée'),
+('DGQM002', 'Échographie-doppler de l\'aorte abdominale, de ses branches viscérales et des artères iliaques'),
+('DHLF001', 'Pose d\'un cathéter épicutanéocave, par voie transcutanée'),
+('DHSF001', 'Oblitération partielle temporaire de la veine cave inférieure par voie veineuse transcutanée'),
+('DKMD001', 'Ressuscitation cardiorespiratoire avec intubation intratrachéale, en dehors d\'un bloc médicotechnique'),
+('DKMD002', 'Ressuscitation cardiorespiratoire avec intubation intratrachéale, dans un bloc médicotechnique'),
+('DZMA004', 'Réparation à l\'étage artériel d\'une transposition ou d\'une malposition des gros vaisseaux avec fermeture d\'une communication interventriculaire, par thoracotomie avec CEC'),
+('DZQJ001', 'Échographie-doppler du coeur et des gros vaisseaux, par voie oesophagienne [Échocardiographie-doppler transoesophagienne]'),
+('DZQJ002', 'Échographie-doppler peropératoire du coeur et des gros vaisseaux par voie oesophagienne, pour contrôle de la correction chirurgicale d\'une valvopathie [valvulopathie] ou d\'une cardiopathie congénitale'),
+('DZQJ006', 'Échographie-doppler du coeur et des gros vaisseaux par voie oesophagienne, au lit du malade'),
+('DZQM001', 'Échographie transthoracique du coeur et des gros vaisseaux, au lit du malade'),
+('DZQM005', 'Échographie-doppler transthoracique du coeur et des gros vaisseaux, au lit du malade'),
+('DZQM006', 'Échographie-doppler transthoracique du coeur et des gros vaisseaux'),
+('DZQM007', 'Échographie transthoracique du coeur et des gros vaisseaux'),
+('DZQN001', 'Remnographie [IRM] morphologique du coeur'),
+('DZRP001', 'Épreuve d\'effort sur tapis roulant ou bicyclette ergométrique, avec électrocardiographie discontinue'),
+('DZSA002', 'Hémostase secondaire à une intervention sur le coeur et/ou les vaisseaux intrathoraciques, par thoracotomie'),
+('EAAF001', 'Dilatation intraluminale de branche de la carotide interne sans pose d\'endoprothèse, par voie artérielle transcutanée'),
+('EACA003', 'Exclusion d\'un anévrisme artériel intracrânien d\'un diamètre supérieur à 20 mm, par craniotomie'),
+('EACA004', 'Exclusion d\'un anévrisme artériel vertébrobasilaire d\'un diamètre inférieur ou égal à 20 mm, par craniotomie'),
+('EACA007', 'Exclusion d\'un anévrisme artériel supratentoriel d\'un diamètre inférieur ou égal à 20 mm, par craniotomie'),
+('EAFA008', 'Exérèse de malformation artérioveineuse cérébrale profonde supratentorielle, par craniotomie'),
+('EAQH002', 'Scanographie des vaisseaux encéphaliques [Angioscanner cérébral]'),
+('EAQJ001', 'Remnographie des vaisseaux encéphaliques [Angio-IRM cérébrale]'),
+('EAQM004', 'Échographie-doppler transcrânienne des vaisseaux intracrâniens, sans épreuve pharmacodynamique'),
+('EASF011', 'Oblitération d\'un anévrisme sacculaire artériel intracrânien en dehors d\'une phase aigüe hémorragique, par voie artérielle transcutanée'),
+('EBCA015', 'Pontage aortocarotidien, par cervicotomie et thoracotomie'),
+('EBGA001', 'Ablation d\'un système diffuseur implanté et du cathéter relié à une veine profonde du membre supérieur ou du cou'),
+('EBHA001', 'Biopsie de l\'artère temporale superficielle'),
+('EBLA002', 'Pose d\'un cathéter dans la veine jugulaire interne, par cervicotomie'),
+('EBLA003', 'Pose souscutanée d\'un système diffuseur implantable avec cathéter relié à une veine profonde du membre supérieur ou du cou'),
+('EBQH002', 'Artériographie sélective de 3 axes cervicocéphaliques ou plus, par voie artérielle transcutanée'),
+('EBQH010', 'Artériographie d\'un axe cervicocéphalique, par injection intraartérielle transcutanée unique'),
+('EBQH011', 'Artériographie sélective d\'un ou 2 axes cervicocéphaliques, par voie artérielle transcutanée'),
+('EBQJ002', 'Remnographie des vaisseaux cervicaux [Angio-IRM cervicale]'),
+('EBQM001', 'Échographie-doppler des artères cervicocéphaliques extracrâniennes'),
+('EBQM002', 'Échographie-doppler des artères cervicocéphaliques extracrâniennes, avec échographie-doppler des artères des membres inférieurs'),
+('ECAF001', 'Dilatation intraluminale d\'une artère du membre supérieur avec pose d\'endoprothèse, par voie artérielle transcutanée'),
+('ECAF002', 'Dilatation intraluminale d\'une artère du membre supérieur sans pose d\'endoprothèse, par voie artérielle transcutanée'),
+('ECQH001', 'Artériographie bilatérale du membre supérieur par voie artérielle ou injection intraartérielle transcutanée, avec manoeuvre positionnelle'),
+('ECQH010', 'Scanographie des vaisseaux du thorax et/ou du coeur [Angioscanner thoracique]'),
+('ECQH011', 'Scanographie des vaisseaux du thorax et/ou du coeur, avec scanographie des vaisseaux de l\'abdomen et/ou du petit bassin [Angioscanner thoracique avec angioscanner de l\'abdomen et/ou du pelvis]'),
+('ECQJ001', 'Remnographie des vaisseaux du thorax [Angio-IRM thoracique]'),
+('ECQM002', 'Échographie-doppler des artères des membres supérieurs'),
+('ECSF004', 'Embolisation sélective ou hypersélective d\'artère à destinée bronchique ou pleuropulmonaire, par voie artérielle transcutanée'),
+('EDAF003', 'Dilatation intraluminale de l\'artère iliaque commune et/ou de l\'artère iliaque externe avec pose d\'endoprothèse, par voie artérielle transcutanée'),
+('EDCA003', 'Pontage artériel croisé ilio-iliaque, iliofémoral ou fémorofémoral, par abord direct'),
+('EDLF002', 'Pose d\'un cathéter artériel ombilical'),
+('EDQH003', 'Artériographie sélective ou hypersélective d\'une branche extradigestive de l\'aorte abdominale ou d\'une branche de l\'artère iliaque interne, par voie artérielle transcutanée'),
+('EDQH006', 'Artériographie sélective ou hypersélective de plusieurs branches digestives de l\'aorte abdominale, par voie artérielle transcutanée'),
+('EDQM001', 'Échographie-doppler des artères iliaques et des artères des membres inférieurs'),
+('EDSA001', 'Ligature d\'une artère digestive, par laparotomie'),
+('EDSA002', 'Ligature des artères iliaques internes [hypogastriques] pour hémorragie de la délivrance, par laparotomie'),
+('EDSF003', 'Embolisation sélective ou hypersélective de l\'artère rénale, par voie artérielle transcutanée'),
+('EDSF012', 'Embolisation sélective ou hypersélective de plusieurs artères digestives, par voie artérielle transcutanée'),
+('EEAF002', 'Dilatation intraluminale d\'une artère du membre inférieur avec dilatation intraluminale de l\'artère iliaque commune et/ou de l\'artère iliaque externe homolatérale avec pose d\'endoprothèse, par voie artérielle transcutanée'),
+('EEAF004', 'Dilatation intraluminale d\'une artère du membre inférieur avec pose d\'endoprothèse, par voie artérielle transcutanée'),
+('EECA003', 'Pontage artériel fémoropoplité au-dessous de l\'interligne articulaire du genou, par abord direct'),
+('EECA005', 'Pontage d\'une artère du pied, par abord direct'),
+('EECA008', 'Pontage artériel fémorotibial ou fémoropéronier sans collier veineux, par abord direct'),
+('EEFA001', 'Thromboendartériectomie de l\'artère fémorale et/ou de ses branches, par abord direct'),
+('EEQH005', 'Artériographie globale du membre inférieur, par voie artérielle transcutanée'),
+('EESA001', 'Ligature d\'une artère de la cuisse ou de la jambe, par abord direct'),
+('EFCA001', 'Suture de plaie de veine profonde du membre supérieur ou du cou, par abord direct'),
+('EFQM001', 'Échographie-doppler des veines des membres supérieurs'),
+('EGLF001', 'Pose d\'un cathéter veineux ombilical'),
+('EHNE001', 'Séance de sclérose et/ou de ligature de varices oesogastriques en dehors de la phase hémorragique, par endoscopie'),
+('EHNE002', 'Sclérose et/ou ligature de varices oesogastriques en phase hémorragique, par endoscopie'),
+('EJFA002', 'Exérèses multiples de branches de la grande veine saphène ou de la petite veine saphène sous anesthésie générale ou locorégionale, par abord direct'),
+('EJGA002', 'Extraction [Stripping] de la grande veine saphène, par abord direct'),
+('EJQM002', 'Échographie-doppler des veines des membres inférieurs et des veines iliaques, sans marquage cutané'),
+('ELQH002', 'Scanographie des vaisseaux de l\'abdomen et/ou du petit bassin [Angioscanner abdominopelvien]'),
+('ELQJ001', 'Remnographie des vaisseaux de l\'abdomen et/ou du petit bassin [Angio-IRM abdominopelvien]'),
+('ELQM002', 'Échographie-doppler unilatérale ou bilatérale des vaisseaux des bourses et du cordon spermatique'),
+('ELSA002', 'Ligature des pédicules vasculaires de l\'utérus pour hémorragie de la délivrance, par laparotomie'),
+('EMQJ001', 'Remnographie des vaisseaux des membres inférieurs [Angio-IRM des membres inférieurs]'),
+('ENLF001', 'Pose de dispositif intraartériel de surveillance de la pression intraartérielle'),
+('ENSF001', 'Embolisation d\'une malformation vasculaire ou d\'une lésion vertébrale, par voie vasculaire transcutanée'),
+('EPLF002', 'Pose d\'un cathéter veineux central, par voie transcutanée'),
+('EQLF001', 'Injection intraveineuse continue de dobutamine ou de dopamine à débit inférieur à 8µg/kg/mn, ou de dopexamine en dehors de la période néonatale, par 24 heures'),
+('EQLF002', 'Perfusion intraveineuse de produit de remplissage à un débit supérieur à 50ml/kg en moins de 24 heures'),
+('EQLF003', 'Injection intraveineuse continue de dobutamine ou de dopamine à débit supérieur à 8µg/kg/mn, d\'adrénaline ou de noradrénaline en dehors de la période néonatale, par 24 heures'),
+('EQLF004', 'Pose de dispositif de mesure des pressions du coeur droit et du débit cardiaque, par voie veineuse transcutanée'),
+('EQMF002', 'Injection intraveineuse continue de médication vasoactive chez le nouveau-né pour suppléance hémodynamique par 24 heures'),
+('EQMF003', 'Suppléance hémodynamique et ventilatoire d\'un patient en état de mort encéphalique, en vue de prélèvement d\'organe'),
+('EQQF001', 'Mesure et enregistrement des pressions du coeur droit, de l\'artère pulmonaire et du coeur gauche, sans injection de produit de contraste, par voie veineuse transcutanée et par voie artérielle transcutanée ou cathétérisme du foramen ovale'),
+('EQQF002', 'Mesure et enregistrement des pressions du coeur gauche et de l\'aorte, sans injection de produit de contraste, par voie artérielle transcutanée'),
+('EQQF003', 'Mesure et enregistement des pressions intravasculaires pulmonaires et systémiques et des différences artérioveineuses des contenus artériels en oxygène, à l\'état basal et après administration d\'agent pharmacologique vasodilatateur, par voie vasculaire tra'),
+('EQQF006', 'Mesure et enregistrement des pressions du coeur droit et de l\'artère pulmonaire, sans injection de produit de contraste, par voie veineuse transcutanée'),
+('EQQH001', 'Mesure et enregistrement des pressions du coeur droit et de l\'artère pulmonaire, avec injection de produit de contraste, par voie veineuse transcutanée'),
+('EQQH002', 'Mesure et enregistrement des pressions du coeur gauche et de l\'aorte, avec injection de produit de contraste, par voie artérielle transcutanée'),
+('EQQH003', 'Mesure et enregistrement des pressions du coeur droit, de l\'artère pulmonaire et du coeur gauche, avec injection de produit de contraste, par voie veineuse transcutanée et par voie artérielle transcutanée ou cathétérisme du foramen ovale'),
+('EQQH004', 'Mesure et enregistrement des pressions du coeur droit, de l\'artère pulmonaire et du coeur gauche, avec injection de produit de contraste, par voie veineuse transcutanée avec perforation du septum interatrial'),
+('EQQJ001', 'Surveillance hémodynamique continue par doppler par voie oesophagienne, par 24 heures'),
+('EQQM001', 'Surveillance hémodynamique continue par échocardiographie transthoracique itérative, par 24 heures'),
+('EQQP008', 'Enregistrement discontinu de la pression intraartérielle par méthode non invasive pendant au moins 24 heures [MAPA] [Holter tensionnel]'),
+('EQQP011', 'Surveillance continue de la pression intraartérielle et/ou de la pression intraveineuse centrale par méthodes effractives, par 24 heures'),
+('EQQP012', 'Surveillance continue des pressions du coeur droit avec mesure du débit cardiaque ou de la fraction d\'éjection du ventricule droit, par 24 heures'),
+('EZCA003', 'Pontage artérioveineux pour accès vasculaire, par abord direct'),
+('EZFA002', 'Exérèse d\'un accès vasculaire artérioveineux sans reconstruction vasculaire'),
+('EZLA002', 'Pose d\'un cathéter veineux central tunnelisé à double courant pour circulation extracorporelle, par abord direct'),
+('EZLF002', 'Pose de deux cathéters veineux centraux tunnelisés dans une seule veine pour circulation extracorporelle, par voie transcutanée'),
+('EZLF003', 'Pose d\'un cathéter veineux central non tunnelisé pour circulation extracorporelle, par voie transcutanée'),
+('EZMA001', 'Création d\'une fistule artérioveineuse pour accès vasculaire par abord direct sans superficialisation veineuse, chez un sujet de 20 kg ou plus'),
+('EZMH001', 'Contrôle radiologique secondaire de perméabilité et/ou de position d\'un dispositif d\'accès vasculaire ou d\'une endoprothèse vasculaire, par injection de produit de contraste'),
+('EZQH004', 'Angiographie peropératoire'),
+('EZQM001', 'Échographie-doppler d\'une fistule artérioveineuse pour circulation extracorporelle'),
+('FAFA013', 'Adénoïdectomie avec myringotomie unilatérale ou bilatérale'),
+('FAFA014', 'Amygdalectomie par dissection'),
+('FCFA002', 'Curage lymphonodal [ganglionnaire] médiastinal supérieur, par cervicotomie'),
+('FCFA004', 'Curage lymphonodal [ganglionnaire] médiastinal unilatéral ou bilatéral, par thoracotomie'),
+('FCFA008', 'Curage lymphonodal [ganglionnaire] cervical complet unilatéral, par cervicotomie'),
+('FCFA012', 'Exérèse de noeud [ganglion] lymphatique du cou à visée diagnostique, par abord direct'),
+('FCFA013', 'Curage lymphonodal [ganglionnaire] cervical complet bilatéral, par cervicotomie'),
+('FCFA016', 'Curage lymphonodal [ganglionnaire] cervical partiel unilatéral, par cervicotomie'),
+('FCFA017', 'Curage lymphonodal du hile du poumon et du médiastin au cours d\'une intervention pleuropulmonaire'),
+('FCFA018', 'Exérèse de noeud [ganglion] lymphatique des membres à visée thérapeutique, par abord direct'),
+('FCFA019', 'Curage lymphonodal [ganglionnaire] iliaque unilatéral ou bilatéral, par laparotomie'),
+('FCFA020', 'Curage lymphonodal [ganglionnaire] cervical partiel bilatéral, par cervicotomie'),
+('FCFA025', 'Curage lymphonodal [ganglionnaire] cervical complet unilatéral avec curage partiel controlatéral, par cervicotomie'),
+('FCFA027', 'Curage lymphonodal [ganglionnaire] cervical complet unilatéral, élargi aux muscles profonds et/ou aux nerfs du cou, à l\'artère carotide externe, à la glande parotide, par cervicotomie'),
+('FCFC003', 'Curage lymphonodal [ganglionnaire] pelvien, par coelioscopie ou rétropéritonéoscopie'),
+('FDFB001', 'Prélèvement de cellules souches hématopoïétiques médullaires [Prélèvement de moelle osseuse], pour thérapie cellulaire'),
+('FDHB002', 'Biopsie ostéomédullaire, par voie transcutanée'),
+('FDHB003', 'Ponction de moelle osseuse pour myélogramme et analyses biologiques dans plusieurs territoires sous anesthésie générale, par voie transcutanée'),
+('FDHB005', 'Ponction de moelle osseuse pour myélogramme dans plusieurs territoires sous anesthésie générale, par voie transcutanée'),
+('FDHB006', 'Ponction de moelle osseuse pour myélogramme et analyses biologiques dans un territoire, par voie transcutanée'),
+('FELF001', 'Transfusion de plus d\'une demimasse sanguine, au cours d\'une intervention sous anesthésie générale ou locorégionale'),
+('FELF002', 'Transfusion de produit sanguin labile non érythrocytaire, chez le nouveau-né'),
+('FELF003', 'Injection intraveineuse simultanée de deux des produits sanguins suivants : plasma frais congelé plaquettes facteur antihémophilique fibrinogène antithrombine III pour suppléance de coagulopathie par 24 heures'),
+('FELF004', 'Transfusion de concentré globulaire à un débit supérieur à une demimasse sanguine chez l\'adulte ou à 40ml/kg chez le nouveau-né en moins de 24 heures'),
+('FELF006', 'Transfusion de produit sanguin labile non érythrocytaire'),
+('FELF011', 'Transfusion de concentré de globules rouges de moins d\'une demimasse sanguine'),
+('FFFA001', 'Splénectomie totale, par laparotomie'),
+('GAFA004', 'Amputation de la pyramide nasale étendue au philtrum et/ou à la joue'),
+('GAFA007', 'Exérèse non transfixiante de lésion de la peau du nez ou de la muqueuse narinaire'),
+('GAFA008', 'Amputation de la pyramide nasale'),
+('GAMA002', 'Réparation de perte de substance du nez par lambeau frontal à pédicule inférieur'),
+('GAMA018', 'Réparation de perte de substance du nez par lambeau local'),
+('GAQE003', 'Endoscopie des fosses nasales, par voie nasale'),
+('GBGD001', 'Déméchage ou nettoyage postopératoire de sinus paranasal, au bloc opératoire'),
+('GBJC001', 'Évacuation de collection du sinus maxillaire, par voie méatale inférieure'),
+('GBPE002', 'Marsupialisation de mucocèle du sinus ethmoïdal et/ou du sinus frontal, par endoscopie'),
+('GBQM001', 'Échographie unilatérale ou bilatérale du sinus maxillaire et/ou du sinus frontal'),
+('GCFD002', 'Exérèse de lésion du rhinopharynx par voie nasale et/ou par voie buccale, avec laser'),
+('GCQE001', 'Fibroscopie du pharynx et du larynx, par voie nasale'),
+('GDFA005', 'Laryngectomie totale'),
+('GDFA008', 'Laryngectomie supraglottique étendue à la base de langue'),
+('GDFA017', 'Laryngopharyngectomie supraglottique'),
+('GDMA001', 'Laryngoplastie, par cervicotomie'),
+('GDQE004', 'Fibroscopie du larynx et de la trachée'),
+('GDQE005', 'Laryngoscopie directe [laryngoscopie en suspension]'),
+('GEFE002', 'Séance de résection et/ou de dilatation de sténose de la trachée, par endoscopie sans laser'),
+('GEHD001', 'Prélèvement intrabronchique distal protégé sur sonde d\'intubation ou sur trachéotomie, sans fibroscopie'),
+('GEHE001', 'Biopsie trachéale et/ou bronchique, au cours d\'une endoscopie des voies aériennes'),
+('GEJE001', 'Aspiration intrabronchique à visée thérapeutique, par fibroscopie [Fibroaspiration bronchique]'),
+('GEJE003', 'Aspiration intrabronchique à visée thérapeutique d\'un patient intubé ou trachéotomisé, par fibroscopie'),
+('GELD002', 'Intubation trachéale en dehors d\'un plateau technique'),
+('GELD003', 'Intubation trachéale avec instillation de surfactant exogène'),
+('GELD004', 'Intubation trachéale'),
+('GELE004', 'Intubation trachéale, par fibroscopie ou dispositif laryngé particulier'),
+('GELF001', 'Pose de cathéter laryngé ou de cathéter trachéal, par voie transcutanée'),
+('GELP001', 'Nébulisation d\'agent thérapeutique à destinée bronchique [aérosol] avec surveillance de la saturation en oxygène par mesure transcutanée [SpO2] et de la fréquence cardiaque, pendant au moins 2 heures'),
+('GEME001', 'Création d\'une fistule oesotrachéale avec pose d\'implant phonatoire, par endoscopie'),
+('GENE004', 'Destruction de lésion de l\'arbre trachéobronchique par laser, par bronchoscopie au tube rigide'),
+('GEPA004', 'Trachéotomie, par cervicotomie'),
+('GEQE004', 'Fibroscopie bronchique, avec lavage alvéolaire à visée diagnostique'),
+('GEQE006', 'Fibroscopie bronchique, avec biopsie pulmonaire par voie transbronchique sans guidage'),
+('GEQE007', 'Fibroscopie bronchique'),
+('GEQE008', 'Bronchoscopie au tube rigide'),
+('GEQE009', 'Fibroscopie bronchique avec lavage alvéolaire à visée diagnostique, chez un patient intubé ou trachéotomisé'),
+('GEQE012', 'Fibroscopie bronchique, chez un patient intubé ou trachéotomisé'),
+('GEQE013', 'Examen panendoscopique des voies aérodigestives supérieures avec trachéoscopie et oesophagoscopie'),
+('GEQH002', 'Fibroscopie bronchique, avec biopsie pulmonaire par voie transbronchique avec guidage radiologique'),
+('GFEA003', 'Transplantation d\'un poumon sans CEC, par thoracotomie'),
+('GFFA007', 'Pneumonectomie avec résection d\'organe ou de structure de voisinage, par thoracotomie'),
+('GFFA013', 'Lobectomie pulmonaire, par thoracotomie'),
+('GFFA017', 'Exérèse partielle non anatomique unique du poumon, par thoracotomie'),
+('GFFC002', 'Exérèse partielle non anatomique du poumon, par thoracoscopie'),
+('GFFC005', 'Résection de bulle pulmonaire avec abrasion ou exérèse de la plèvre pariétale, par thoracoscopie'),
+('GFFC006', 'Résection de bulle pulmonaire, par thoracoscopie'),
+('GFQL006', 'Scintigraphie pulmonaire de ventilation et de perfusion'),
+('GFQL007', 'Scintigraphie pulmonaire de perfusion'),
+('GGBA001', 'Interposition ou apposition de lambeau pleural ou péricardique, au cours d\'une intervention intrathoracique'),
+('GGHB001', 'Ponction d\'un épanchement pleural, sans guidage'),
+('GGHB002', 'Biopsie de la plèvre, par voie transcutanée sans guidage'),
+('GGJA002', 'Évacuation de collection de la cavité pleurale, par thoracotomie'),
+('GGJB001', 'Drainage d\'un épanchement de la cavité pleurale, par voie transcutanée sans guidage'),
+('GGJB002', 'Évacuation d\'un épanchement de la cavité pleurale, par voie transcutanée sans guidage'),
+('GGJC001', 'Évacuation de collection septique de la cavité pleurale avec débridement, par thoracoscopie'),
+('GGJC002', 'Évacuation d\'un hémothorax, par thoracoscopie'),
+('GGJF001', 'Séance d\'irrigation-lavage pleurale'),
+('GGJF002', 'Séance de lavage pleural par un dispositif implanté'),
+('GGLB002', 'Injection intrapleurale d\'agent pharmacologique, par voie transcutanée'),
+('GGLB006', 'Pose d\'un drain thoracique pour lavage pleural, par voie transcutanée'),
+('GGLC001', 'Instillation intrapleurale de substance irritante, par thoracoscopie'),
+('GGNC001', 'Abrasion ou exérèse de la plèvre pariétale, par thoracoscopie'),
+('GGPA002', 'Libération du poumon [Pneumolyse] pour symphyse pleurale'),
+('GHFA002', 'Exérèse de tumeur du médiastin, par thoracotomie vidéoassistée'),
+('GHQC001', 'Exploration du médiastin, par médiastinoscopie'),
+('GLHF001', 'Prélèvement de sang artériel avec gazométrie sanguine et mesure du pH, sans épreuve d\'hyperoxie'),
+('GLLD002', 'Ventilation mécanique discontinue au masque facial ou par embout buccal pour kinésithérapie, par 24 heures'),
+('GLLD003', 'Ventilation spontanée au masque facial, par canule nasale ou par canule nasopharyngée, sans aide inspiratoire, avec pression expiratoire positive [PEP], par 24 heures'),
+('GLLD004', 'Ventilation mécanique intratrachéale avec pression expiratoire positive [PEP] supérieure à 6 et/ou FiO2 supérieure à 60%, avec technique de décubitus ventral alterné par 24 heures'),
+('GLLD006', 'Ventilation spontanée sur sonde d\'intubation trachéale, par 24 heures'),
+('GLLD008', 'Ventilation mécanique intratrachéale avec pression expiratoire positive [PEP] supérieure à 6 et/ou FiO2 supérieure à 60%, par 24 heures'),
+('GLLD012', 'Ventilation mécanique continue au masque facial pour suppléance ventilatoire, par 24 heures'),
+('GLLD013', 'Ventilation spontanée sur trachéotomie au cours d\'un sevrage de ventilation mécanique, par 24 heures'),
+('GLLD015', 'Ventilation mécanique intratrachéale avec pression expiratoire positive [PEP] inférieure ou égale à 6 et FiO2 inférieure ou égale à 60%, par 24 heures'),
+('GLLP001', 'Oxygénothérapie avec surveillance continue de l\'oxymétrie, en dehors de la ventilation mécanique, par 24 heures'),
+('GLLP002', 'Ventilation manuelle d\'un nouveau-né à la naissance, au masque facial'),
+('GLLP003', 'Pose d\'un masque facial de ventilation nasale'),
+('GLLP004', 'Ventilation barométrique ou volumétrique non invasive au masque facial pendant au moins 2 heures cumulées au cours des 12 heures, pour insuffisance respiratoire aigüe'),
+('GLLP005', 'Oxygénothérapie hyperbare sans utilisation de ventilation mécanique ni d\'agent pharmacologique vasoactif'),
+('GLMF001', 'Adaptation des réglages d\'une ventilation non invasive par mesures répétées des gaz du sang'),
+('GLQF001', 'Réglage du débit d\'oxygène par mesures répétées des gaz du sang, pour instauration ou adaptation d\'une oxygénothérapie de débit défini'),
+('GLQP005', 'Enregistrement continu de la saturation en oxygène par mesure transcutanée [SpO2] [Oxymétrie de pouls], pendant au moins 6 heures'),
+('GLQP007', 'Polygraphie respiratoire nocturne'),
+('GLQP013', 'Mesure transcutanée de la tension partielle en oxygène [TcPO2] au repos'),
+('HAFA002', 'Pelvi-glosso-mandibulectomie non interruptrice, par abord intrabuccal'),
+('HAFA006', 'Pelviglossectomie de langue mobile, par abord intrabuccal'),
+('HAFA018', 'Uvulovélectomie avec palatectomie partielle'),
+('HAFA020', 'Exérèse transfixiante de lésion de la lèvre, ou exérèse d\'une commissure labiale'),
+('HAFA023', 'Glossectomie partielle de langue mobile, par abord intrabuccal'),
+('HAFA027', 'Pelviglossectomie de langue mobile, par abord cervicofacial'),
+('HAFA029', 'Glossectomie totale de langue mobile et de base de langue'),
+('HAFA032', 'Exérèse d\'une lésion de la muqueuse de la bouche ou de l\'oropharynx de 2 cm à 4 cm de grand axe, par abord intrabuccal'),
+('HAMA028', 'Correction de rétraction de lèvre par autoplastie locale'),
+('HBED016', 'Réduction de luxation de plusieurs dents'),
+('HBGD029', 'Avulsion de 15 à 20 dents sur arcade, en un temps'),
+('HBGD038', 'Avulsion de quatre troisièmes molaires retenues ou à l\'état de germe'),
+('HBQK002', 'Radiographie panoramique dentomaxillaire'),
+('HCFA006', 'Parotidectomie totale élargie au méat [conduit] auditif externe et/ou à la mandibule'),
+('HCJA001', 'Évacuation de collection salivaire, par abord direct'),
+('HDFA005', 'Pharyngolaryngectomie totale'),
+('HEAE003', 'Dilatation antérograde de l\'oesophage, par fibroscopie'),
+('HEAH001', 'Dilatation de l\'oesophage, avec guidage radiologique'),
+('HECA001', 'Suture de plaie ou de perforation de l\'oesophage, par cervicotomie'),
+('HEGE001', 'Extraction de corps étranger de l\'oesophage, par endoscopie rigide'),
+('HEGE002', 'Extraction de corps étranger de l\'oesophage, de l\'estomac et/ou du duodénum, par oeso-gastro-duodénoscopie'),
+('HELE002', 'Pose d\'une endoprothèse de l\'oesophage, par endoscopie'),
+('HEMA001', 'oesophagocoloplastie rétrosternale sans oesophagectomie, avec anastomose oesophagocolique, par cervicotomie et laparotomie'),
+('HEMA003', 'Reconstruction de l\'oesophage et fermeture de la fistule en un temps pour atrésie avec fistule, par thoracotomie'),
+('HEQD002', 'pH-métrie oesophagienne et/ou gastrique sur 24 heures'),
+('HEQE001', 'oesophagoscopie au tube rigide'),
+('HEQE002', 'Endoscopie oeso-gastro-duodénale'),
+('HEQH001', 'Radiographie de l\'oesophage avec opacification par produit de contraste [Transit oesophagien]');
+INSERT INTO `ths_acte` (`code_ccam`, `libelle_acte`) VALUES
+('HEQH002', 'Radiographie oeso-gastro-duodénale avec opacification par produit de contraste [Transit oeso-gastro-duodénal]'),
+('HESE001', 'Hémostase de lésion de l\'oesophage, de l\'estomac et/ou du duodénum avec laser, par oeso-gastro-duodénoscopie'),
+('HESE002', 'Hémostase de lésion de l\'oesophage, de l\'estomac et/ou du duodénum sans laser, par oeso-gastro-duodénoscopie'),
+('HFAE001', 'Dilatation du pylore, par oeso-gastro-duodénoscopie'),
+('HFCA002', 'Gastrostomie cutanée, par laparotomie'),
+('HFCA003', 'Suture de plaie ou de perforation de l\'estomac ou du duodénum, par laparotomie'),
+('HFCB001', 'Gastrostomie, par voie transcutanée avec guidage endoscopique'),
+('HFCH001', 'Gastrostomie, par voie transcutanée avec guidage échographique et/ou radiologique'),
+('HFFA005', 'Gastrectomie totale avec rétablissement de la continuité, par laparotomie'),
+('HFFA006', 'Gastrectomie partielle inférieure avec anastomose gastrojéjunale, par laparotomie'),
+('HFFA009', 'Résection partielle atypique de la paroi de l\'estomac n\'interrompant pas la continuité, par laparotomie'),
+('HFKH001', 'Changement d\'une sonde de gastrostomie ou de gastrojéjunostomie, par voie externe avec guidage radiologique'),
+('HFLE001', 'Pose d\'une sonde gastrique, duodénale ou jéjunale, par oeso-gastro-duodénoscopie'),
+('HFLH002', 'Pose d\'une endoprothèse de l\'estomac ou du duodénum, avec guidage radiologique'),
+('HFMA004', 'Pyloroplastie ou duodénoplastie, par laparotomie'),
+('HFMA005', 'Totalisation secondaire de gastrectomie avec rétablissement de la continuité, par laparotomie'),
+('HFPA001', 'Gastrotomie à visée thérapeutique, par laparotomie'),
+('HFPA002', 'Pylorotomie extramuqueuse [Pyloromyotomie extramuqueuse], par laparotomie'),
+('HGCA002', 'Suture de plaie ou de perforation de l\'intestin grêle, par laparotomie'),
+('HGCA004', 'Entérostomie ou colostomie cutanée de protection, au cours d\'une résection intestinale avec rétablissement de la continuité'),
+('HGCA008', 'Entérostomie cutanée, par laparotomie'),
+('HGFA003', 'Résection segmentaire unique de l\'intestin grêle sans rétablissement de la continuité, en dehors de l\'occlusion, par laparotomie'),
+('HGFA004', 'Résection segmentaire multiple de l\'intestin grêle, par laparotomie'),
+('HGLA001', 'Pose d\'une sonde de jéjunostomie pour alimentation entérale, par laparotomie'),
+('HGLE001', 'Pose d\'une endoprothèse du duodénum, par oeso-gastro-duodénoscopie'),
+('HGNE001', 'Séance de destruction de lésion du duodénum, par oeso-gastro-duodénoscopie'),
+('HGPA001', 'Duodénotomie à visée thérapeutique ou duodénectomie partielle, par laparotomie'),
+('HGPA002', 'Entérotomie à visée thérapeutique, par laparotomie'),
+('HGPA004', 'Libération étendue de l\'intestin grêle [Entérolyse étendue] pour occlusion aigüe par laparotomie'),
+('HGQE002', 'Duodénoscopie par appareil à vision latérale'),
+('HGQE005', 'Entéroscopie iléale [Iléoscopie]'),
+('HGQH001', 'Radiographie de l\'intestin grêle avec administration de produit de contraste par une sonde nasoduodénale [entéroclyse]'),
+('HGQJ002', 'Échoendoscopie duodénale sans biopsie'),
+('HGSA001', 'Fermeture d\'entérostomie cutanée, par abord direct'),
+('HHAE001', 'Dilatation d\'une sténose du côlon et/ou du rectum, par endoscopie'),
+('HHCA001', 'Suture de plaie ou de perforation du côlon, par laparotomie'),
+('HHFA001', 'Appendicectomie, par abord de la fosse iliaque'),
+('HHFA002', 'Colectomie gauche avec libération de l\'angle gauche, avec rétablissement de la continuité, par laparotomie avec préparation par coelioscopie'),
+('HHFA004', 'Colectomie totale avec conservation du rectum, avec anastomose iléorectale, par laparotomie avec préparation par coelioscopie'),
+('HHFA006', 'Colectomie gauche avec libération de l\'angle gauche, avec rétablissement de la continuité, par laparotomie'),
+('HHFA008', 'Colectomie droite avec rétablissement de la continuité, par laparotomie avec préparation par coelioscopie'),
+('HHFA009', 'Colectomie droite avec rétablissement de la continuité, par laparotomie'),
+('HHFA010', 'Colectomie gauche sans libération de l\'angle gauche, avec rétablissement de la continuité, par laparotomie avec préparation par coelioscopie'),
+('HHFA011', 'Appendicectomie, par laparotomie'),
+('HHFA014', 'Colectomie gauche sans libération de l\'angle gauche, sans rétablissement de la continuité, par laparotomie'),
+('HHFA016', 'Appendicectomie, par coelioscopie ou par laparotomie avec préparation par coelioscopie'),
+('HHFA018', 'Colectomie transverse, par laparotomie'),
+('HHFE001', 'Exérèse de 1 à 3 polypes de moins de 1cm de diamètre du côlon et/ou du rectum, par rectosigmoïdoscopie ou coloscopie partielle'),
+('HHNE001', 'Séance de destruction de lésion du côlon et/ou du rectum sans laser, par coloscopie totale'),
+('HHQE002', 'Coloscopie totale, avec franchissement de l\'orifice iléocolique'),
+('HHQE004', 'Coloscopie partielle au delà du côlon sigmoïde'),
+('HHQE005', 'Coloscopie totale avec visualisation du bas-fond cæcal, sans franchissement de l\'orifice iléocolique'),
+('HHQH001', 'Radiographie du côlon avec opacification par produit de contraste'),
+('HJCA001', 'Suture de plaie ou de perforation intrapéritonéale du rectum, par laparotomie'),
+('HJFA002', 'Résection rectosigmoïdienne avec anastomose colorectale souspéritonéale, par laparotomie'),
+('HJFA004', 'Résection rectosigmoïdienne avec anastomose colorectale souspéritonéale, par laparotomie avec préparation par coelioscopie'),
+('HJFA006', 'Résection rectosigmoïdienne par laparotomie, avec anastomose coloanale par voie anale ou par abord transsphinctérien'),
+('HJFA007', 'Amputation du rectum, par laparotomie et abord périnéal'),
+('HJGD001', 'Extraction de corps étranger ou de fécalome intrarectal, par voie anale sous anesthésie générale ou locorégionale'),
+('HJQD001', 'Examen du rectum sous anesthésie générale, par voie anale'),
+('HJQE001', 'Rectosigmoïdoscopie'),
+('HJQE002', 'Rectoscopie au tube rigide'),
+('HKFA004', 'Excision d\'une fissure anale [Fissurectomie anale]'),
+('HKHA001', 'Biopsie de lésion de la région périanale et/ou du canal anal'),
+('HKPA004', 'Mise à plat d\'abcès et/ou de fistule bas de l\'anus [transsphinctérien inférieur] en un temps, par fistulotomie ou fistulectomie'),
+('HKPA006', 'Incision d\'abcès de la région anale'),
+('HKQE001', 'Anuscopie'),
+('HKSD001', 'Hémostase secondaire de l\'anus en période postopératoire'),
+('HLFA002', 'Résection du dôme saillant de kyste hydatique du foie, par laparotomie'),
+('HLFA013', 'Résection unisegmentaire ou atypique du foie, par laparotomie'),
+('HLHH001', 'Biopsie du foie par voie jugulaire avec guidage échographique et/ou radiologique, sans prise de pression intraveineuse'),
+('HLHJ003', 'Biopsie non ciblée du foie, par voie transcutanée avec guidage échographique'),
+('HLQM001', 'Échographie transcutanée du foie et des conduits biliaires'),
+('HMCA002', 'Cholédocoduodénostomie, par laparotomie'),
+('HMCC002', 'Cholédocoduodénostomie, par coelioscopie'),
+('HMFA007', 'Cholécystectomie, par laparotomie'),
+('HMFA008', 'Cholécystectomie avec extraction de calcul de la voie biliaire principale par cholédocotomie, par laparotomie'),
+('HMFC004', 'Cholécystectomie, par coelioscopie'),
+('HMGA001', 'Extraction de calcul de la voie biliaire principale par cholédocotomie, par laparotomie'),
+('HMJA001', 'Drainage transpariétal des conduits biliaires [Drainage biliaire externe], au cours d\'une intervention abdominale'),
+('HMJH003', 'Drainage externe de plusieurs conduits biliaires, par voie transcutanée avec guidage échographique et/ou radiologique'),
+('HMJH006', 'Drainage externe d\'un conduit biliaire, par voie transcutanée avec guidage échographique et/ou radiologique'),
+('HMKE001', 'Changement d\'une endoprothèse biliaire, par oeso-gastro-duodénoscopie'),
+('HMLE002', 'Pose d\'une endoprothèse biliaire, par oeso-gastro-duodénoscopie'),
+('HMPE001', 'Sphinctérotomie biliaire, par oeso-gastro-duodénoscopie'),
+('HMQA001', 'Endoscopie peropératoire des voies biliaires, par abord transcystique ou cholédocotomie'),
+('HMQH005', 'Cholangiopancréatographie rétrograde sans manométrie oddienne, par oeso-gastro-duodénoscopie'),
+('HMQH006', 'Cholangiographie, par injection de produit de contraste dans un drain biliaire externe'),
+('HMQH007', 'Cholangiographie rétrograde, par oeso-gastro-duodénoscopie'),
+('HMQH008', 'Cholangiographie ou pancréaticographie [wirsungographie] peropératoire'),
+('HMQJ001', 'Échoendoscopie biliopancréatique sans biopsie'),
+('HMQJ002', 'Échoendoscopie biliopancréatique avec biopsie transpariétale biliopancréatique guidée'),
+('HNCA003', 'Anastomose pancréaticojéjunale avec anastomose biliojéjunale et gastroentérostomie, par laparotomie'),
+('HNFA007', 'Duodénopancréatectomie céphalique, par laparotomie'),
+('HNFA012', 'Nécrosectomie pancréatique, par laparotomie'),
+('HNFA013', 'Pancréatectomie gauche avec splénectomie [Splénopancréatectomie gauche], par laparotomie'),
+('HNJA001', 'Drainage externe de collection pancréatique, par laparotomie'),
+('HPFA004', 'Résection du grand omentum [grand épiploon] [Omentectomie], par laparotomie'),
+('HPFC001', 'Exérèse de lésion d\'un repli péritonéal [méso] sans résection intestinale, par coelioscopie'),
+('HPHB001', 'Ponction-lavage du péritoine, avec pose de cathéter intrapéritonéal par voie transcutanée'),
+('HPHB003', 'Ponction d\'un épanchement péritonéal, par voie transcutanée'),
+('HPJB001', 'Évacuation d\'ascite, par voie transcutanée'),
+('HPMA001', 'Épiploplastie intraabdominale par libération de la grande courbure gastrique avec pédiculisation sur un pédicule gastroépiploïque, au cours d\'une intervention par laparotomie'),
+('HPMH001', 'Contrôle radiologique secondaire de position et/ou de fonctionnement d\'un drain péritonéal, d\'un cathéter de dialyse péritonéale ou d\'une dérivation péritonéojugulaire, avec opacification par produit de contraste'),
+('HPPA002', 'Section de bride et/ou d\'adhérences péritonéales pour occlusion intestinale aigüe, par laparotomie'),
+('HPPC002', 'Libération d\'adhérences [Adhésiolyse] étendues et/ou serrées du péritoine pelvien pour stérilité chez la femme, par coelioscopie'),
+('HPPC003', 'Section de bride et/ou d\'adhérences péritonéales pour occlusion intestinale aigüe, par coelioscopie'),
+('HSLD001', 'Alimentation entérale par sonde avec apport de 20 à 35 kilocalories par kilogramme par jour [kcal/kg/jour]'),
+('HSLD002', 'Alimentation entérale par sonde avec apport de plus de 35 kilocalories par kilogramme par jour [kcal/kg/jour]'),
+('HSLF001', 'Alimentation entérale et parentérale, avec apport de plus de 35 kilocalories par kilogramme par jour [kcal/kg/jour]'),
+('HSLF002', 'Alimentation parentérale avec apport de 20 à 35 kilocalories par kilogramme par jour [kcal/kg/jour]'),
+('HSLF003', 'Alimentation parentérale avec apport de plus de 35 kilocalories par kilogramme par jour [kcal/kg/jour]'),
+('HZHE002', 'Biopsie et/ou brossage cytologique de la paroi du tube digestif ou de conduit biliopancréatique, au cours d\'une endoscopie'),
+('HZMH001', 'Contrôle radiologique secondaire de position et/ou de fonctionnement d\'une sonde digestive, d\'un drain biliaire ou d\'une endoprothèse biliaire avec opacification par produit de contraste'),
+('JAEA003', 'Transplantation du rein'),
+('JAFA008', 'Néphrectomie partielle avec dissection du pédicule vasculaire, par lombotomie ou abord lombaire postérieur'),
+('JAFA019', 'Néphrectomie partielle avec dissection du pédicule vasculaire, par laparotomie'),
+('JAFA028', 'Néphrectomie totale élargie à la loge rénale avec surrénalectomie et thrombectomie par cavotomie, par laparotomie ou abord lomboabdominal'),
+('JAFA029', 'Néphrectomie totale élargie à la loge rénale avec surrénalectomie, par laparotomie ou abord lomboabdominal'),
+('JAFA032', 'Néphro-urétérectomie totale, par abord direct'),
+('JAQL003', 'Scintigraphie rénale glomérulaire ou tubulaire [Néphrographie isotopique] avec épreuve pharmacologique'),
+('JAQM002', 'Échographie-doppler transcutanée unilatérale ou bilatérale du rein et de ses vaisseaux'),
+('JAQM003', 'Échographie transcutanée unilatérale ou bilatérale du rein et de la région lombaire'),
+('JAQM004', 'Échographie transcutanée unilatérale ou bilatérale du rein et de la région lombaire, avec échographie transcutanée de la vessie'),
+('JBMA001', 'Plastie du bassinet et de la jonction pyélo-urétérale, par abord direct'),
+('JBQH002', 'Urétéropyélographie rétrograde [UPR]'),
+('JCCA011', 'Urétérostomie cutanée transintestinale avec création d\'un réservoir continent, par abord direct'),
+('JCFA005', 'Résection longitudinale modelante d’un méga-uretère avec anastomose urétérovésicale et procédé antireflux, par abord direct'),
+('JCFA007', 'Exérèse d\'une urétérocèle avec réimplantation urétérale homolatérale, par abord direct'),
+('JCKE002', 'Changement d’une endoprothèse urétérale, par endoscopie rétrograde'),
+('JCLD001', 'Pose d\'une endoprothèse urétérale, par une néphrostomie déjà en place'),
+('JCLE001', 'Pose d\'une sonde urétérale à visée thérapeutique, par endoscopie rétrograde'),
+('JCLE002', 'Pose d\'une endoprothèse urétérale, par endoscopie rétrograde'),
+('JCQE002', 'Urétéroscopie par une urétérostomie cutanée transintestinale non continente'),
+('JDCA003', 'Suture de plaie ou de rupture de vessie, par laparotomie'),
+('JDCJ001', 'Cystostomie, par voie transcutanée avec guidage échographique'),
+('JDDB001', 'Cervicocystopexie par bandelette synthétique infra-urétrale, par voie transvaginale et voie transcutanée, avec guidage endoscopique'),
+('JDFE001', 'Résection de plus de 3 tumeurs de la vessie, par endoscopie'),
+('JDGE001', 'Extraction de corps étranger ou de calcul de la vessie, par endoscopie'),
+('JDHE002', 'Biopsie de la vessie à la pince, par endoscopie'),
+('JDJD001', 'Évacuation de la vessie par cathétérisme transitoire [Sondage vésical évacuateur]'),
+('JDKD002', 'Changement d\'une sonde urétrovésicale'),
+('JDLD001', 'Pose d\'une sonde urétrovésicale [Sondage vésical à demeure]'),
+('JDLF001', 'Pose d\'un cathéter intravésical, par voie transcutanée suprapubienne'),
+('JDQE001', 'Fibroscopie urétrovésicale'),
+('JDQE003', 'Urétrocystoscopie à l\'endoscope rigide'),
+('JDQH001', 'Urétrocystographie rétrograde'),
+('JEMA009', 'Urétroplastie chez la femme'),
+('JFFA021', 'Exérèse de lésion non surrénalienne de l\'espace rétropéritonéal avec dissection des gros vaisseaux, par abord direct'),
+('JFJA001', 'Évacuation de collection périrénale, par abord direct'),
+('JGFA006', 'Vésiculoprostatectomie totale, par laparotomie'),
+('JHJA001', 'Évacuation d\'un abcès du scrotum, par abord direct'),
+('JHNP001', 'Destruction de lésion du gland et/ou du prépuce du pénis'),
+('JJFA002', 'Résection partielle de l\'ovaire, par laparotomie'),
+('JJFC001', 'Salpingectomie partielle ou totale pour grossesse extra-utérine, par coelioscopie'),
+('JJFC003', 'Kystectomie ovarienne intrapéritonéale, par coelioscopie'),
+('JJFC006', 'Salpingectomie totale, par coelioscopie'),
+('JJFC010', 'Salpingoovariectomie [Annexectomie], par coelioscopie'),
+('JJJC001', 'Évacuation de collection de l\'annexe ou du ligament large, par coelioscopie'),
+('JKFA026', 'Hystérectomie totale, par abord vaginal'),
+('JKFA028', 'Hystérectomie totale avec annexectomie unilatérale ou bilatérale, par laparotomie'),
+('JKFA031', 'Conisation du col de l\'utérus'),
+('JKFE001', 'Exérèse de polype de l\'utérus, par hystéroscopie'),
+('JKGD004', 'Ablation d\'un dispositif intra-utérin, par voie vaginale'),
+('JKHA001', 'Biopsie ou frottis de l\'endomètre, sans hystéroscopie'),
+('JKLD001', 'Pose d\'un dispositif intra-utérin'),
+('JKND003', 'Destruction de lésion du col de l\'utérus, avec laser'),
+('JKQE002', 'Hystéroscopie'),
+('JLQE001', 'Vaginoscopie'),
+('JMCA002', 'Suture immédiate de déchirure obstétricale du vagin, de la vulve ou du périnée [périnée simple]'),
+('JMPA001', 'Incision de la glande vestibulaire majeure [de Bartholin]'),
+('JMPA006', 'Épisiotomie'),
+('JNBD001', 'Cerclage du col de l\'utérus au cours de la grossesse, par voie transvaginale'),
+('JNGD002', 'Ablation de cerclage du col de l\'utérus'),
+('JNJD001', 'Évacuation d\'un utérus gravide, au 2ème trimestre de la grossesse'),
+('JNJD002', 'Évacuation d\'un utérus gravide par aspiration et/ou curetage, au 1er trimestre de la grossesse'),
+('JNJP001', 'Évacuation d\'un utérus gravide par moyen médicamenteux, au 1er trimestre de la grossesse'),
+('JNMD002', 'Révision de la cavité de l\'utérus après délivrance naturelle'),
+('JNQD001', 'Monitorage électronique des contractions de l\'utérus gravide et/ou du rythme cardiaque du foetus, par voie utérine'),
+('JNQM001', 'Échographie non morphologique de la grossesse avant 11 semaines d\'aménorrhée'),
+('JPGD001', 'Extraction manuelle du placenta complet'),
+('JPJB001', 'Évacuation de liquide amniotique pour hydramnios, par voie transcutanée'),
+('JQGA002', 'Accouchement par césarienne programmée, par laparotomie'),
+('JQGA003', 'Accouchement par césarienne au cours du travail, par laparotomie'),
+('JQGA004', 'Accouchement par césarienne en urgence, en dehors du travail, par laparotomie'),
+('JQGD003', 'Accouchement unique par le siège par voie naturelle avec petite extraction, chez une primipare'),
+('JQGD004', 'Accouchement unique par le siège par voie naturelle, chez une primipare'),
+('JQGD006', 'Extraction instrumentale au détroit inférieur sur présentation céphalique'),
+('JQGD009', 'Extraction instrumentale au détroit moyen sur présentation céphalique'),
+('JQGD010', 'Accouchement céphalique unique par voie naturelle, chez une primipare'),
+('JQGD012', 'Accouchement céphalique unique par voie naturelle, chez une multipare'),
+('JQLF003', 'Injection d\'agent pharmacologique chez le foetus, par ponction du cordon ombilical'),
+('JQQM001', 'Échographie de surveillance de la croissance foetale'),
+('JQQM003', 'Échographie de surveillance de la croissance foetale avec échographie-doppler des artères utérines de la mère et des vaisseaux du foetus'),
+('JQQM004', 'Échographie biométrique et morphologique d\'une grossesse unifoetale au 3ème trimestre avec échographie-doppler des artères utérines de la mère'),
+('JQQM005', 'Échographie biométrique et morphologique d\'une grossesse multifoetale au 3ème trimestre'),
+('JQQM009', 'Échographie biométrique et morphologique d\'une grossesse unifoetale au 3ème trimestre'),
+('JQQM010', 'Échographie biométrique et morphologique d\'une grossesse uniembryonnaire au 1er trimestre'),
+('JQQM011', 'Échographie biométrique et morphologique d\'une grossesse unifoetale au 2ème trimestre avec échographie-doppler des artères utérines de la mère'),
+('JQQM012', 'Échographie biométrique et morphologique d\'une grossesse unifoetale au 2ème trimestre'),
+('JQQM013', 'Échographie biométrique et morphologique d\'une grossesse multifoetale au 2ème trimestre'),
+('JQQP001', 'Enregistrement du rythme cardiaque du foetus d\'une durée de plus de 20 minutes, en dehors du travail'),
+('JSED001', 'Transfert intra-utérin d\'embryon, par voie vaginale'),
+('JVJB001', 'Séance d\'épuration extrarénale par dialyse péritonéale pour insuffisance rénale chronique'),
+('JVJF001', 'Séance d\'épuration extrarénale par hémodiafiltration, hémofiltration ou biofiltration sans anticoagulant pour insuffisance rénale chronique'),
+('JVJF002', 'Épuration extrarénale par hémodialyse, hémodiafiltration ou hémofiltration discontinue pour insuffisance rénale aigüe, par 24 heures'),
+('JVJF004', 'Séance d\'épuration extrarénale par hémodialyse pour insuffisance rénale chronique'),
+('JVJF005', 'Épuration extrarénale par hémodialyse, hémodiafiltration ou hémofiltration continue pour insuffisance rénale aigüe, par 24 heures'),
+('JVJF008', 'Séance d\'épuration extrarénale par hémodiafiltration, hémofiltration ou biofiltration sans acétate pour insuffisance rénale chronique'),
+('JZQH002', 'Urographie intraveineuse sans cysto-urétrographie permictionnelle'),
+('KAFA001', 'Exérèse de lésion de la loge hypophysaire, par abord transsphénoïdal'),
+('KCFA005', 'Thyroïdectomie totale, par cervicotomie'),
+('KCQM001', 'Échographie transcutanée de la glande thyroïde'),
+('KDQA001', 'Exploration des sites parathyroïdiens cervicaux, par cervicotomie'),
+('KDQL001', 'Scintigraphie des glandes parathyroïdes'),
+('KEFA002', 'Surrénalectomie partielle ou totale pour lésion autre qu\'un phéochromocytome, par abord direct'),
+('LACA001', 'Ostéosynthèse de fracture du bord infraorbitaire, à foyer ouvert'),
+('LACA017', 'Ostéosynthèse de fracture cranioorbitaire avec fermeture de brèche ostéodurale'),
+('LAEP002', 'Réduction orthopédique de fracture de l\'os nasal [des os propres du nez]'),
+('LAGA004', 'Ablation de matériel externe d\'ostéosynthèse ou de distraction du crâne et/ou du massif facial'),
+('LAHH001', 'Ponction ou cytoponction du crâne, de son contenu et/ou du massif facial, par voie transcutanée avec guidage scanographique'),
+('LALA002', 'Pose d\'un implant intraosseux crânien ou facial pour fixation d\'épithèse ou d\'appareillage auditif ostéo-intégré'),
+('LAMA009', 'Cranioplastie de la voûte'),
+('LAPA006', 'Taille et transposition de volet intéressant les orbites'),
+('LAQJ001', 'Remnographie [IRM] de la face, avec injection intraveineuse de produit de contraste'),
+('LAQK002', 'Scanographie unilatérale ou bilatérale de la partie pétreuse de l\'os temporal [rocher] et de l\'oreille moyenne'),
+('LAQK003', 'Radiographie du crâne, du massif facial et/ou des sinus paranasaux selon 1 ou 2 incidences'),
+('LAQK005', 'Radiographie du crâne, du massif facial et/ou des sinus paranasaux selon 3 incidences ou plus'),
+('LAQK011', 'Scanographie unilatérale ou bilatérale de l\'angle pontocérébelleux et/ou du méat auditif interne [conduit auditif interne]'),
+('LAQK012', 'Téléradiographie du crâne et du massif facial selon 1 incidence'),
+('LAQK013', 'Scanographie de la face'),
+('LBCA001', 'Ostéosynthèse d\'une fracture extracondylaire bifocale de la mandibule, à foyer ouvert'),
+('LBCA003', 'Ostéosynthèse et/ou suspension faciale pour fracture occlusofaciale de type Le Fort I, par abord direct'),
+('LBCB001', 'Ostéosynthèse d\'une fracture extracondylaire plurifocale de la mandibule, à foyer fermé'),
+('LBED006', 'Réduction orthopédique d\'une fracture extracondylaire unifocale de la mandibule , avec blocage maxillomandibulaire'),
+('LBFA006', 'Maxillectomie supérieure sans reconstruction'),
+('LCQH001', 'Scanographie des tissus mous du cou, avec injection intraveineuse de produit de contraste'),
+('LDCA011', 'Ostéosynthèse et/ou arthrodèse antérieure de la colonne vertébrale sans exploration du contenu canalaire, par cervicotomie antérieure ou antérolatérale'),
+('LDCA013', 'Ostéosynthèse de la colonne vertébrale avec exploration du contenu canalaire, par cervicotomie antérieure ou antérolatérale'),
+('LDFA008', 'Exérèse d\'une hernie discale de la colonne vertébrale avec ostéosynthèse et/ou arthrodèse, par cervicotomie antérieure ou antérolatérale'),
+('LDFA011', 'Exérèse d\'une hernie discale de la colonne vertébrale, par cervicotomie antérieure ou antérolatérale'),
+('LDPA006', 'Corporotomie [Somatotomie] d\'une vertèbre pour décompression médullaire, par cervicotomie antérieure ou antérolatérale'),
+('LDPA007', 'Corporotomie [Somatotomie] d\'une vertèbre pour décompression médullaire, avec arthrodèse et/ou ostéosynthèse, par cervicotomie antérieure ou antérolatérale'),
+('LDQK001', 'Radiographie du rachis cervical selon 1 ou 2 incidences'),
+('LDQK002', 'Radiographie du rachis cervical selon 3 incidences ou plus'),
+('LECA001', 'Ostéosynthèse de la colonne vertébrale avec exploration du contenu canalaire, par thoraco-phréno-laparotomie'),
+('LECA006', 'Ostéosynthèse et/ou arthrodèse antérieure de la colonne vertébrale sans exploration du contenu canalaire, par thoraco-phréno-laparotomie'),
+('LECC001', 'Ostéosynthèse et/ou arthrodèse antérieure ou épiphysiodèse de la colonne vertébrale, par thoracoscopie'),
+('LEQK001', 'Radiographie du rachis thoracique'),
+('LFAA002', 'Recalibrage bilatéral de la colonne vertébrale lombaire ou lombosacrée, par abord postérieur'),
+('LFCA004', 'Ostéosynthèse de la colonne vertébrale avec exploration du contenu canalaire, par lombotomie ou laparotomie'),
+('LFFA001', 'Laminarthrectomie lombaire ou lombosacrée totale bilatérale, par abord postérieur'),
+('LFFA002', 'Exérèse d\'une hernie discale de la colonne vertébrale lombaire, par abord postérieur ou postérolatéral'),
+('LFFA004', 'Exérèse d\'une récidive d\'une hernie discale de la colonne vertébrale lombaire préalablement opérée par abord direct, par abord postérieur'),
+('LFFA005', 'Laminarthrectomie lombaire ou lombosacrée totale unilatérale avec ostéosynthèse, par abord postérieur'),
+('LFFA009', 'Corporectomie vertébrale partielle, par lombotomie ou laparotomie'),
+('LFPA001', 'Ostéotomie antérieure ou discectomie totale pour déformation rigide de la colonne vertébrale, avec arthrodèse et correction instrumentale, sur 1 à 3 vertèbres, par lombotomie ou laparotomie'),
+('LFPA002', 'Ostéotomie antérieure ou discectomie totale pour déformation rigide de la colonne vertébrale, avec arthrodèse et correction instrumentale, sur plus de 3 vertèbres, par lombotomie ou laparotomie'),
+('LFQK001', 'Radiographie du rachis lombaire selon 4 incidences ou plus'),
+('LFQK002', 'Radiographie du rachis lombaire selon 1 à 3 incidences'),
+('LGQK001', 'Radiographie du sacrum et/ou du coccyx'),
+('LHCA002', 'Ostéosynthèse postérieure de la colonne vertébrale sans exploration du contenu canalaire, par abord postérieur'),
+('LHCA010', 'Ostéosynthèse postérieure de la colonne vertébrale avec exploration du contenu canalaire, par abord postérieur'),
+('LHFA016', 'Laminectomie vertébrale sans exploration du contenu intradural, par abord postérieur ou postérolatéral'),
+('LHFA028', 'Arthrectomie totale bilatérale et/ou ostéotomie postérieure pour déformation rigide de la colonne vertébrale, avec arthrodèse et correction instrumentale, sur plus de 9 vertèbres, par abord postérieur'),
+('LHHH003', 'Biopsie de lésion osseuse ou discale de la colonne vertébrale, par voie transcutanée avec guidage radiologique'),
+('LHKA001', 'Remplacement du disque intervertébral par prothèse'),
+('LHLH001', 'Infiltration anesthésique d\'articulation vertébrale postérieure avec guidage radiologique, avec évaluation diagnostique et pronostique'),
+('LHLH003', 'Infiltration thérapeutique d\'articulation vertébrale postérieure, par voie transcutanée avec guidage radiologique'),
+('LHMA003', 'Correction instrumentale d\'une déformation souple de la colonne vertébrale, avec arthrodèse sur 6 à 9 vertèbres, par abord postérieur'),
+('LHPA003', 'Laminotomie vertébrale sans exploration du contenu intradural, par abord postérieur ou postérolatéral'),
+('LHPA004', 'Mise à plat d\'une lésion vertébrale infectieuse ou ossifluente, par abord postérieur'),
+('LHQH006', 'Scanographie d\'un segment du rachis, avec injection intraveineuse de produit de contraste'),
+('LHQJ001', 'Remnographie [IRM] d\'un ou de deux segments du rachis et de son contenu, avec injection intraveineuse de produit de contraste'),
+('LHQJ002', 'Remnographie [IRM] de plus de deux segments du rachis et de son contenu, avec injection intraveineuse de produit de contraste'),
+('LHQK001', 'Scanographie d\'un segment du rachis, sans injection intraveineuse de produit de contraste'),
+('LHQK002', 'Téléradiographie du rachis en totalité selon 2 incidences'),
+('LHQK004', 'Téléradiographie du rachis en totalité selon 1 incidence'),
+('LHQN001', 'Remnographie [IRM] d\'un ou de deux segments du rachis et de son contenu, sans injection intraveineuse de produit de contraste'),
+('LHQN002', 'Remnographie [IRM] de plus de deux segments du rachis et de son contenu, sans injection intraveineuse de produit de contraste'),
+('LJMA001', 'Thoracoplastie de plus de 5 côtes'),
+('LJQK002', 'Radiographie du thorax avec radiographie du squelette du thorax'),
+('LLBA002', 'Interposition ou apposition de lambeau diaphragmatique ou intercostal, au cours d\'une intervention intrathoracique'),
+('LLCA004', 'Suture de rupture récente de la coupole gauche du diaphragme, par laparotomie'),
+('LLJA003', 'Évacuation de collection de la région des muscles masticateurs, par abord intrabuccal'),
+('LMGA001', 'Ablation d\'une prothèse de la paroi abdominale, par abord direct'),
+('LMMA004', 'Cure d\'éventration postopératoire de la paroi abdominale antérieure avec pose de prothèse, par abord direct'),
+('LMMA006', 'Cure d\'une hernie de la paroi abdominale antérieure après l\'âge de 16 ans avec pose de prothèse, par abord direct'),
+('LMMA009', 'Cure d\'une hernie de la paroi abdominale antérieure après l\'âge de 16 ans sans pose de prothèse, par abord direct'),
+('LMMA010', 'Cure d\'éventration postopératoire de la paroi abdominale antérieure sans pose de prothèse, par abord direct'),
+('LMMA012', 'Cure unilatérale d\'une hernie de l\'aine avec pose de prothèse, par abord inguinal'),
+('LMMA015', 'Cure unilatérale d\'une hernie de l\'aine sans pose de prothèse, par abord inguinal'),
+('MACA001', 'Ostéosynthèse de fracture de la clavicule à foyer ouvert'),
+('MAQK003', 'Radiographie de la ceinture scapulaire et/ou de l\'épaule selon 1 ou 2 incidences'),
+('MBCA005', 'Ostéosynthèse de fracture céphalotubérositaire de l\'humérus'),
+('MBCA010', 'Ostéosynthèse d\'une fracture de l\'épicondyle médial ou latéral de l\'humérus, à foyer ouvert'),
+('MBCB002', 'Ostéosynthèse de fracture de la diaphyse de l\'humérus par matériel centromédullaire, à foyer fermé'),
+('MBQK001', 'Radiographie du bras'),
+('MCCA001', 'Ostéosynthèse d\'une fracture simple ou de décollement épiphysaire de l\'extrémité proximale d\'un os de l\'avant-bras, à foyer ouvert'),
+('MCCA004', 'Ostéosynthèse de fracture de la diaphyse d\'un os de l\'avant-bras, à foyer ouvert'),
+('MCCA005', 'Ostéosynthèse de fracture de l\'extrémité distale d\'un os de l\'avant-bras, à foyer ouvert'),
+('MCCA008', 'Ostéosynthèse de fracture de la diaphyse des deux os de l\'avant-bras, à foyer ouvert'),
+('MCCB004', 'Ostéosynthèse de fracture ou de décollement épiphysaire de l\'extrémité distale d\'un os de l\'avant-bras par broche, à foyer fermé'),
+('MCCB007', 'Ostéosynthèse de fracture de la diaphyse des deux os de l\'avant-bras, à foyer fermé'),
+('MCEP001', 'Réduction orthopédique de fracture ou de décollement épiphysaire de l\'extrémité distale d\'un os ou des deux os de l\'avant-bras'),
+('MCQK001', 'Radiographie de l\'avant-bras'),
+('MDCA014', 'Ostéosynthèse de fracture articulaire d\'un os de la main, à foyer ouvert'),
+('MDEP002', 'Réduction orthopédique d\'une fracture d\'un os de la main'),
+('MDEP003', 'Réduction orthopédique de fracture et/ou d\'une luxation du poignet'),
+('MDGB001', 'Ablation de matériel d\'ostéosynthèse enfoui de la main, par voie transcutanée sans guidage'),
+('MDQK001', 'Radiographie de la main ou de doigt'),
+('MDQK002', 'Radiographie bilatérale de la main et/ou du poignet, selon 1 incidence sur un seul cliché de face'),
+('MEEP002', 'Réduction orthopédique d\'une luxation scapulohumérale'),
+('MFEP002', 'Réduction orthopédique d\'une luxation ou d\'une luxation-fracture du coude'),
+('MFPA001', 'Libération mobilisatrice de l\'articulation du coude avec résection d\'ostéome synostosique, par abord direct'),
+('MFPA003', 'Libération mobilisatrice de l\'articulation du coude avec libération du nerf ulnaire, par abord direct'),
+('MFQK002', 'Radiographie du coude selon 1 ou 2 incidences'),
+('MGMP002', 'Confection d\'un appareil rigide d\'immobilisation du poignet et/ou de la main'),
+('MGQK003', 'Radiographie du poignet selon 1 ou 2 incidences'),
+('MJCA012', 'Réparation de plaie de l\'appareil extenseur d\'un doigt par suture, par abord direct'),
+('MJFA003', 'Excision d\'un panaris profond de la pulpe des doigts [phlegmon pulpaire]'),
+('MJMA002', 'Réparation de plaie de l\'appareil extenseur d\'un doigt avec suture de plaie d\'une articulation, sur un rayon de la main'),
+('MZEA002', 'Réimplantation de la main sectionnée au niveau du métacarpe'),
+('MZFA007', 'Amputation ou désarticulation de plusieurs doigts, sans résection des métacarpiens'),
+('MZFA013', 'Amputation ou désarticulation d\'un doigt, sans résection du métacarpien'),
+('MZGA003', 'Évidement d\'un os du membre supérieur sans comblement, par abord direct'),
+('NACA001', 'Ostéosynthèse unifocale de fracture ou de fracture-luxation de la ceinture pelvienne, à foyer ouvert'),
+('NACA002', 'Ostéosynthèse plurifocale de fracture ou de fracture-luxation de la ceinture pelvienne, à foyer ouvert'),
+('NACA005', 'Ostéosynthèse de fracture de l\'acétabulum, par abord postérieur'),
+('NACB001', 'Ostéosynthèse de fracture ou de fracture-luxation de la ceinture pelvienne, à foyer fermé'),
+('NAEP001', 'Réduction orthopédique progressive de fracture et/ou de luxation de la ceinture pelvienne, par traction continue ou suspension'),
+('NAQK002', 'Radiographie du bassin et/ou des articulations sacro-iliaques selon 1 ou 2 incidences'),
+('NAQK003', 'Radiographie du bassin et/ou des hanches selon 3 ou 4 incidences'),
+('NBAA003', 'Allongement osseux progressif du fémur ou du tibia par système interne'),
+('NBCA001', 'Ostéosynthèse de fracture complexe de la patelle, à foyer ouvert'),
+('NBCA002', 'Ostéosynthèse de fracture simple de la patelle, à foyer ouvert'),
+('NBCA003', 'Ostéosynthèse de fracture complexe supracondylaire et intercondylaire du fémur, à foyer ouvert'),
+('NBCA005', 'Ostéosynthèse de fracture intracapsulaire du col [transcervicale] du fémur, de décollement épiphysaire ou d\'épiphysiolyse de l\'extrémité proximale du fémur'),
+('NBCA006', 'Ostéosynthèse de fracture infratrochantérienne ou trochantérodiaphysaire du fémur'),
+('NBCA008', 'Ostéosynthèse de fracture du grand trochanter'),
+('NBCA010', 'Ostéosynthèse de fracture extracapsulaire du col du fémur'),
+('NBCB002', 'Ostéosynthèse de fracture de la diaphyse du fémur par matériel centromédullaire sans verrouillage distal, à foyer fermé'),
+('NBCB004', 'Ostéosynthèse de fracture de la diaphyse du fémur par matériel centromédullaire avec verrouillage distal, à foyer fermé'),
+('NBCB005', 'Ostéosynthèse préventive du fémur pour lésion ostéolytique, à foyer fermé'),
+('NBEB001', 'Réduction orthopédique progressive de fracture du fémur, par traction continue transosseuse'),
+('NBEP001', 'Réduction orthopédique progressive de fracture du fémur, par traction continue collée'),
+('NBFA007', 'Résection \"en bloc\" d\'une extrémité et/ou de la diaphyse du fémur'),
+('NBGA007', 'Ablation de matériel d\'ostéosynthèse du fémur, par abord direct'),
+('NBPA011', 'Ostéotomie complexe de la diaphyse du fémur'),
+('NBPA014', 'Ostéotomie du grand trochanter'),
+('NBQK001', 'Radiographie de la cuisse'),
+('NCCA004', 'Ostéosynthèse de fracture complexe du pilon tibial, à foyer ouvert'),
+('NCCA006', 'Ostéosynthèse de fracture extraarticulaire de l\'extrémité proximale du tibia, à foyer ouvert'),
+('NCCA007', 'Ostéosynthèse de fracture articulaire simple unicondylaire du tibia, à foyer ouvert'),
+('NCCA010', 'Ostéosynthèse de fracture de la diaphyse du tibia par fixateur externe'),
+('NCCA011', 'Ostéosynthèse de fracture ou de décollement épiphysaire supramalléolaire du tibia, à foyer ouvert'),
+('NCCA012', 'Ostéosynthèse de fracture de l\'extrémité distale de la fibula, à foyer ouvert'),
+('NCCA016', 'Ostéosynthèse de fracture bimalléolaire simple, à foyer ouvert'),
+('NCCB002', 'Ostéosynthèse de fracture ou de décollement épiphysaire de l\'extrémité proximale du tibia ou des deux os de la jambe, à foyer fermé'),
+('NCCB004', 'Ostéosynthèse de fracture de la diaphyse du tibia par matériel centromédullaire sans verrouillage distal, à foyer fermé'),
+('NCCB006', 'Ostéosynthèse de fracture de la diaphyse du tibia par matériel centromédullaire avec verrouillage distal, à foyer fermé'),
+('NCEP001', 'Réduction orthopédique progressive de fracture d\'une extrémité et/ou de la diaphyse du tibia ou des deux os de la jambe, par traction continue'),
+('NCFA006', 'Exérèse partielle du tibia et/ou de la fibula, par abord unique'),
+('NCGA001', 'Évidement du tibia et/ou de la fibula sans comblement, par abord direct'),
+('NCQK001', 'Radiographie de la jambe'),
+('NDCA004', 'Ostéosynthèse de fracture complexe du calcanéus, à foyer ouvert'),
+('NDEP001', 'Réduction orthopédique de fracture et/ou de luxation de l\'avant-pied'),
+('NDQK001', 'Radiographie du pied selon 1 à 3 incidences'),
+('NDQK002', 'Radiographie bilatérale du pied selon 1 à 3 incidences par côté'),
+('NEEB001', 'Réduction orthopédique d\'une luxation traumatique de l\'articulation coxofémorale, avec pose de traction continue'),
+('NEEP002', 'Réduction orthopédique d\'une luxation de prothèse de l\'articulation coxofémorale'),
+('NEFA004', 'Synovectomie coxofémorale, par arthrotomie par un abord'),
+('NEGA002', 'Ablation d\'une prothèse totale de l\'articulation coxofémorale'),
+('NEGA003', 'Ablation d\'une prothèse totale de l\'articulation coxofémorale avec coaptation trochantéro-iliaque'),
+('NEJB001', 'Évacuation d\'une collection de l\'articulation coxofémorale, par voie transcutanée'),
+('NEKA002', 'Changement de la pièce acétabulaire ou fémorale d\'une prothèse totale de hanche, avec reconstruction osseuse de l\'acétabulum ou du fémur'),
+('NEKA009', 'Changement de la pièce acétabulaire ou fémorale d\'une prothèse totale de hanche sans reconstruction osseuse'),
+('NEKA014', 'Remplacement de l\'articulation coxofémorale par prothèse totale avec renfort métallique acétabulaire'),
+('NEKA018', 'Remplacement de l\'articulation coxofémorale par prothèse fémorale cervicocéphalique'),
+('NEKA020', 'Remplacement de l\'articulation coxofémorale par prothèse totale'),
+('NEQK002', 'Radiographie unilatérale ou bilatérale de la hanche selon 1 ou 2 incidences'),
+('NEQM001', 'Échographie de la hanche du nouveau-né'),
+('NFDA003', 'Arthrodèse fibulotibiale proximale, par arthrotomie'),
+('NFFC003', 'Méniscectomies latérale et médiale du genou, par arthroscopie'),
+('NFGA002', 'Ablation d\'une prothèse du genou'),
+('NFJA001', 'Nettoyage de l\'articulation du genou, par arthrotomie'),
+('NFKA008', 'Remplacement de l\'articulation du genou par prothèse tricompartimentaire sur une déformation supérieure à 10° dans le plan frontal'),
+('NFLA001', 'Repose d\'une prothèse articulaire du genou, avec reconstruction osseuse'),
+('NFQK001', 'Radiographie du genou selon 1 ou 2 incidences'),
+('NFQK003', 'Radiographie du genou selon 3 ou 4 incidences'),
+('NGCA001', 'Suture ou reconstruction de l\'appareil capsuloligamentaire de l\'articulation tibiotalienne et/ou de l\'articulation talocalcanéenne, par abord direct'),
+('NGJA001', 'Nettoyage de l\'articulation tibiotalienne, par arthrotomie'),
+('NGKA001', 'Remplacement de l\'articulation tibiotalienne par prothèse'),
+('NGPC001', 'Libération mobilisatrice de l\'articulation tibiotalienne et/ou synovectomie tibiotalienne, par arthroscopie'),
+('NGQK001', 'Radiographie de la cheville selon 1 à 3 incidences'),
+('NGQK002', 'Radiographie de la cheville selon 4 incidences ou plus'),
+('NJAB001', 'Allongement du tendon calcanéen [d\'Achille], par voie transcutanée'),
+('NJEA003', 'Réinsertion du tendon calcanéen [d\'Achille], par abord direct'),
+('NJMB001', 'Réparation d\'une rupture du tendon calcanéen [d\'Achille], par voie transcutanée'),
+('NJPA024', 'Section, allongement ou transfert tendineux pour correction unilatérale d\'attitudes vicieuses de la hanche, du genou et du pied, par abord direct'),
+('NZEB001', 'Traction continue transosseuse du membre inférieur, pour lésion non traumatique'),
+('NZFA002', 'Amputation transtibiale'),
+('NZFA004', 'Amputation ou désarticulation de plusieurs orteils'),
+('NZFA005', 'Amputation ou désarticulation au médiopied ou à l\'avant-pied, sans stabilisation de l\'arrière-pied'),
+('NZFA007', 'Amputation transfémorale'),
+('NZFA010', 'Amputation ou désarticulation d\'un orteil'),
+('NZHA001', 'Biopsie d\'un os et/ou d\'une articulation du membre inférieur, par abord direct'),
+('NZHB001', 'Biopsie osseuse et/ou biopsie articulaire du membre inférieur, par voie transcutanée sans guidage'),
+('NZQJ001', 'Remnographie [IRM] unilatérale ou bilatérale d\'une articulation et/ou d\'un segment du membre inférieur, avec injection intraveineuse de produit de contraste'),
+('NZQK002', 'Scanographie unilatérale ou bilatérale d\'une articulation et/ou d\'un segment du membre inférieur, sans injection de produit de contraste'),
+('NZQK003', 'Téléradiographie bilatérale du membre inférieur en totalité, de face en appui monopodal l\'un après l\'autre'),
+('PAFA010', 'Prélèvement d\'autogreffe osseuse corticale ou corticospongieuse, ou d\'autogreffe périostée à distance du foyer opératoire, sur un site sans changement de position'),
+('PAGA001', 'Ablation de matériel d\'ostéosynthèse des membres, par abord direct'),
+('PAGA004', 'Ablation de matériel d\'ostéosynthèse centromédullaire des membres, par abord direct'),
+('PAGB001', 'Ablation de broche d\'ostéosynthèse enfouie, par voie transcutanée sans guidage'),
+('PAGB004', 'Ablation de broche d\'ostéosynthèse non enfouie'),
+('PAQK002', 'Radiographie du squelette pour calcul de l\'âge osseux, chez l\'enfant de plus de 2 ans'),
+('PAQK005', 'Radiographie de l\'hémisquelette pour calcul de l\'âge osseux, chez l\'enfant de moins de 2 ans'),
+('PAQK007', 'Ostéodensitométrie [Absorptiométrie osseuse] sur 2 sites, par méthode biphotonique'),
+('PAQL002', 'Scintigraphie osseuse du corps entier en plusieurs phases'),
+('PAQL003', 'Scintigraphie osseuse du corps entier en une phase [temps tardif]'),
+('PAQL008', 'Scintigraphie osseuse segmentaire en plusieurs phases, sans acquisition complémentaire par un collimateur sténopé'),
+('PCCA001', 'Suture d\'une rupture de muscle'),
+('PCQM001', 'Échographie des muscles et/ou des tendons'),
+('PDFA001', 'Exérèse de lésion fasciale et/ou sousfasciale des tissus mous, sans dissection d\'un gros tronc vasculaire ou nerveux'),
+('PDFA002', 'Exérèse de lésion fasciale et/ou sousfasciale des tissus mous, avec dissection de gros tronc vasculaire et/ou nerveux'),
+('PZMA002', 'Réfection d\'un moignon d\'amputation de membre avec régularisation osseuse'),
+('PZMA005', 'Réparation par lambeau libre ostéocutané, ostéomusculaire ou ostéo-musculo-cutané, avec anastomoses vasculaires'),
+('QAJA001', 'Pansement chirurgical secondaire de brûlure sur l\'extrémité céphalique et les deux mains'),
+('QAJA004', 'Parage et/ou suture de plaie profonde de la peau et des tissus mous de la face de moins de 3 cm de grand axe'),
+('QAJA005', 'Parage et/ou suture de plaie superficielle de la peau de la face de 3 cm à 10 cm de grand axe'),
+('QAJA006', 'Parage et/ou suture de plaie profonde de la peau et des tissus mous de la face de 3 cm à 10 cm de grand axe'),
+('QAJA007', 'Pansement chirurgical initial de brûlure sur l\'extrémité céphalique et les deux mains'),
+('QAJA010', 'Pansement chirurgical secondaire de brûlure sur l\'extrémité céphalique'),
+('QAJA011', 'Pansement chirurgical secondaire de brûlure sur l\'extrémité céphalique et une main'),
+('QAJA013', 'Parage et/ou suture de plaie superficielle de la peau de la face de moins de 3 cm de grand axe'),
+('QAJA014', 'Pansement chirurgical initial de brûlure sur l\'extrémité céphalique'),
+('QAMA002', 'Réparation par lambeau local ou régional muqueux, cutané ou fasciocutané, à pédicule vasculonerveux non individualisé ou non individualisable, sur l\'extrémité céphalique'),
+('QANP006', 'Dermabrasion du visage sur moins de 5 cm2'),
+('QAPA002', 'Mise à plat d\'une lésion infectieuse du cuir chevelu ou de la voûte crânienne'),
+('QBFA007', 'Excision d\'un sinus pilonidal périnéofessier'),
+('QBFA012', 'Dermolipectomie abdominale avec transposition de l\'ombilic, lipoaspiration de l\'abdomen et fermeture de diastasis des muscles droits de l\'abdomen'),
+('QCJA001', 'Parage et/ou suture de plaie profonde de la peau et des tissus mous de la main'),
+('QCJA002', 'Pansement chirurgical secondaire de brûlure sur les deux mains'),
+('QEEA001', 'Transposition du mamelon'),
+('QEFA001', 'Tumorectomie du sein avec curage lymphonodal axillaire'),
+('QEFA020', 'Mastectomie totale avec conservation des pectoraux et curage lymphonodal axillaire'),
+('QEMA013', 'Mastoplastie bilatérale de réduction'),
+('QEQK001', 'Mammographie bilatérale'),
+('QEQK004', 'Mammographie de dépistage [Mammotest ]'),
+('QZEA006', 'Autogreffe de peau totale sur plus d\'une localisation'),
+('QZEA011', 'Greffe cutanée pour brûlure en dehors de l\'extrémité céphalique et des mains, sur 10% à 12,5% de la surface corporelle'),
+('QZEA012', 'Greffe cutanée pour brûlure en dehors de l\'extrémité céphalique et des mains, sur 12,5% à 15% de la surface corporelle'),
+('QZEA024', 'Autogreffe de peau totale sur une localisation de surface égale ou supérieure à 10 cm2'),
+('QZEA031', 'Autogreffe de peau totale sur une localisation de surface inférieure à 10 cm2'),
+('QZEA037', 'Greffe cutanée pour brûlure en dehors de l\'extrémité céphalique et des mains, sur 2,5% à 5% de la surface corporelle'),
+('QZEA039', 'Autogreffe de peau mince ou demiépaisse, pleine ou en filet, sur une surface de 50 cm2 à 200 cm2'),
+('QZEA041', 'Greffe cutanée pour brûlure en dehors de l\'extrémité céphalique et des mains, sur 5% à 7,5% de la surface corporelle'),
+('QZFA006', 'Excision de brûlure en dehors de l\'extrémité céphalique et des mains, sur 2,5% à 5% de la surface corporelle'),
+('QZFA007', 'Exérèse de lésion souscutanée susfasciale de 3 cm à 10 cm de grand axe'),
+('QZFA019', 'Excision de brûlure en dehors de l\'extrémité céphalique et des mains, sur moins de 2,5% de la surface corporelle'),
+('QZFA027', 'Excision de lésion infectieuse diffuse de la peau et des tissus mous sur plus de 200 cm2'),
+('QZFA031', 'Exérèse de lésion superficielle de la peau par excision de 2 à 5 zones cutanées de moins de 5 cm2'),
+('QZFA035', 'Exérèse de lésion superficielle de la peau par excision d\'une zone cutanée de 50 cm2 à 200 cm2'),
+('QZFA036', 'Exérèse de lésion superficielle de la peau par excision d\'une zone cutanée de moins de 5 cm2'),
+('QZGA003', 'Ablation d\'un corps étranger profond des tissus mous, en dehors du visage et des mains'),
+('QZGA005', 'Ablation d\'un générateur souscutané de stimulation neurologique'),
+('QZHA001', 'Biopsie dermoépidermique'),
+('QZJA001', 'Parage et/ou suture de plaie profonde de la peau et des tissus mous de plus de 10 cm de grand axe, en dehors de la face et de la main'),
+('QZJA002', 'Parage et/ou suture de plaie superficielle de la peau de moins de 3 cm de grand axe, en dehors de la face'),
+('QZJA005', 'Pansement chirurgical initial de brûlure en dehors de l\'extrémité céphalique et des mains, sur 1% à 10% de la surface corporelle'),
+('QZJA006', 'Parage et/ou suture d\'une plaie pulpo-unguéale. Avec ou sans : plastie du lit unguéal et repositionnement de la tablette unguéale ou pose de prothèse'),
+('QZJA007', 'Pansement chirurgical secondaire de brûlure en dehors de l\'extrémité céphalique et des mains, sur 10% à 30% de la surface corporelle'),
+('QZJA008', 'Pansement chirurgical secondaire de brûlure en dehors de l\'extrémité céphalique et des mains, sur 30% à 60% de la surface corporelle'),
+('QZJA009', 'Évacuation de collection superficielle de la peau, par abord direct'),
+('QZJA010', 'Pansement chirurgical secondaire de brûlure en dehors de l\'extrémité céphalique et des mains, sur 1% à 10% de la surface corporelle'),
+('QZJA011', 'Évacuation de collection profonde de la peau et des tissus mous, par abord direct'),
+('QZJA012', 'Parage et/ou suture de plaie profonde de la peau et des tissus mous de 3 cm à 10 cm de grand axe, en dehors de la face et de la main'),
+('QZJA013', 'Parage secondaire de lésion traumatique ou infectieuse de la peau et des tissus mous, sous anesthésie générale ou locorégionale'),
+('QZJA015', 'Parage et/ou suture de plaie superficielle de la peau de plus de 10 cm de grand axe, en dehors de la face'),
+('QZJA017', 'Parage et/ou suture de plaie superficielle de la peau de 3 cm à 10 cm de grand axe, en dehors de la face'),
+('QZJA018', 'Pansement chirurgical secondaire de brûlure en dehors de l\'extrémité céphalique et des mains, sur plus de 60% de la surface corporelle'),
+('QZLA004', 'Pose d\'implant pharmacologique souscutané'),
+('QZMA001', 'Réparation par lambeau local ou régional muqueux, cutané ou fasciocutané, à pédicule vasculonerveux non individualisé ou non individualisable, en dehors de l\'extrémité céphalique'),
+('QZMA009', 'Réparation par lambeau à distance cutané, fasciocutané, musculaire, musculocutané ou ostéo-musculo-cutané, à pédicule définitif'),
+('QZNP001', 'Séance de destruction de lésion cutanée sur moins de 30 cm2, par laser vasculaire ou par lampe flash'),
+('QZNP003', 'Destruction de lésion cutanée sur 5 cm2 à 20 cm2, par laser CO2 impulsionnel ou scanérisé, ou par laser erbium Yag'),
+('QZNP013', 'Séance de destruction de 1 à 5 lésions cutanées superficielles, par électrocoagulation'),
+('QZQM001', 'Échographie de la peau, des ongles et/ou des tissus mous'),
+('ZBQA003', 'Radiographie peropératoire du thorax et/ou de l\'abdomen, sans injection de produit de contraste'),
+('ZBQH001', 'Scanographie du thorax, avec injection intraveineuse de produit de contraste'),
+('ZBQJ001', 'Remnographie [IRM] du thorax, avec injection intraveineuse de produit de contraste'),
+('ZBQK001', 'Scanographie du thorax, sans injection intraveineuse de produit de contraste'),
+('ZBQK002', 'Radiographie du thorax'),
+('ZBQK003', 'Examen radiologique dynamique du thorax, pour étude de la fonction respiratoire et/ou cardiaque'),
+('ZBQM001', 'Échographie transthoracique du médiastin, du poumon et /ou de la cavité pleurale'),
+('ZCJA002', 'Évacuation d\'une collection intraabdominale, par laparotomie'),
+('ZCJD001', 'Irrigation-drainage d\'une fistule d\'un viscère abdominal, par 24 heures'),
+('ZCQA001', 'Exploration de la cavité abdominale, par laparotomie [Laparotomie exploratrice]'),
+('ZCQC002', 'Exploration de la cavité abdominale, par coelioscopie [Coelioscopie exploratrice]'),
+('ZCQD001', 'Examen clinique du petit bassin [pelvis] et du périnée de la femme, sous anesthésie générale'),
+('ZCQH001', 'Scanographie de l\'abdomen et du petit bassin [pelvis], avec injection intraveineuse de produit de contraste'),
+('ZCQH002', 'Scanographie de l\'abdomen ou du petit bassin [pelvis], avec injection intraveineuse de produit de contraste'),
+('ZCQJ004', 'Remnographie [IRM] de l\'abdomen ou du petit bassin [pelvis], avec injection intraveineuse de produit de contraste'),
+('ZCQJ006', 'Échographie transcutanée avec échographie par voie rectale et/ou vaginale [par voie cavitaire] du petit bassin [pelvis] de la femme'),
+('ZCQK001', 'Pelvimétrie par radiographie'),
+('ZCQK002', 'Radiographie de l\'abdomen sans préparation'),
+('ZCQK004', 'Scanographie de l\'abdomen et du petit bassin [pelvis], sans injection intraveineuse de produit de contraste'),
+('ZCQK005', 'Scanographie de l\'abdomen ou du petit bassin [pelvis], sans injection intraveineuse de produit de contraste'),
+('ZCQM001', 'Échographie transcutanée de l\'abdomen, avec échographie-doppler des vaisseaux digestifs');
+INSERT INTO `ths_acte` (`code_ccam`, `libelle_acte`) VALUES
+('ZCQM003', 'Échographie transcutanée du petit bassin [pelvis] de la femme'),
+('ZCQM004', 'Échographie transcutanée de l\'étage supérieur de l\'abdomen avec échographie-doppler des vaisseaux digestifs'),
+('ZCQM005', 'Échographie transcutanée de l\'abdomen, avec échographie transcutanée du petit bassin [pelvis]'),
+('ZCQM006', 'Échographie transcutanée de l\'étage supérieur de l\'abdomen'),
+('ZCQM008', 'Échographie transcutanée de l\'abdomen'),
+('ZCQN002', 'Remnographie [IRM] de l\'abdomen ou du petit bassin [pelvis], sans injection intraveineuse de produit de contraste'),
+('ZZEP001', 'Installation d\'un nouveau-né en incubateur à la naissance, avec surveillance de la température, de la fréquence cardiaque, de la saturation en oxygène par mesure transcutanée [SpO2], de la glycémie capillaire et de la pression artérielle'),
+('ZZGA001', 'Ablation d\'un générateur de stimulation ou de défibrillation cardiaque implantable'),
+('ZZHA001', 'Prélèvement peropératoire pour examen cytologique ou anatomopathologique extemporané'),
+('ZZHH003', 'Biopsie d\'un organe profond sur plusieurs cibles, par voie transcutanée avec guidage scanographique'),
+('ZZHH008', 'Biopsie d\'un organe profond sur une cible, par voie transcutanée avec guidage scanographique'),
+('ZZHJ004', 'Ponction ou cytoponction d\'un organe superficiel sur plusieurs cibles, par voie transcutanée avec guidage échographique'),
+('ZZHJ015', 'Ponction ou cytoponction d\'un organe profond sur plusieurs cibles, par voie transcutanée avec guidage échographique'),
+('ZZJH003', 'Drainage d\'une collection d\'un organe profond, par voie transcutanée avec guidage scanographique'),
+('ZZJH005', 'Drainage de plusieurs collections d\'un organe profond, par voie transcutanée avec guidage scanographique'),
+('ZZJH007', 'Drainage d\'une collection d\'un organe profond, par voie transcutanée avec guidage radiologique'),
+('ZZJJ004', 'Drainage de plusieurs collections d\'un organe profond, par voie transcutanée avec guidage échographique'),
+('ZZJJ008', 'Drainage d\'une collection d\'un organe profond, par voie transcutanée avec guidage échographique'),
+('ZZKA002', 'Changement d\'un générateur de stimulation cardiaque implantable'),
+('ZZLF012', 'Anesthésie générale ou locorégionale chez un patient ASA1 ou ASA2, facultative au cours d\'un acte diagnostique ou thérapeutique'),
+('ZZLF013', 'Anesthésie générale ou locorégionale chez un patient ASA3 ou ASA4, facultative au cours d\'un acte diagnostique ou thérapeutique'),
+('ZZLF014', 'Anesthésie générale, facultative au cours d\'une acte diagnostique ou thérapeutique sur la cavité orale'),
+('ZZMK002', 'Simulation d\'irradiation externe à l\'aide d\'un simulateur, d\'un simulateur-scanographe ou d\'un scanographe à fonction simulateur intégrée'),
+('ZZMK006', 'Préparation à une irradiation externe avec repérage par conformateur, dosimétrie bidimensionnelle sur 1 ou 2 coupes et simulation à l\'aide d\'un simulateur, d\'un simulateur-scanographe ou d\'un scanographe à fonction simulateur intégrée'),
+('ZZMK009', 'Reconstruction tridimensionnelle des images acquises par scanographie'),
+('ZZMK013', 'Simulation d\'irradiation externe à l\'aide d\'un simulateur, d\'un simulateur-scanographe ou d\'un scanographe à fonction simulateur intégrée, avec fabrication de cache personnalisé focalisé et/ou paramétrage d\'un collimateur multilame'),
+('ZZMN002', 'Reconstruction tridimensionnelle des images acquises par remnographie [IRM]'),
+('ZZNL028', 'Séance d\'irradiation externe par machine produisant des photons d\'énergie égale ou supérieure à 5 MV et inférieure à 15 MV par 1 ou 2 faisceaux, avec utilisation de modificateur de faisceau'),
+('ZZNL038', 'Séance d\'irradiation externe par machine produisant des photons d\'énergie égale ou supérieure à 15 MV par 1 ou 2 faisceaux, avec utilisation dynamique de collimateur multilame [modulation d\'intensité]'),
+('ZZNL039', 'Séance d\'irradiation externe par machine produisant des photons d\'énergie égale ou supérieure à 15 MV par 3 ou 4 faisceaux, sans utilisation de modificateur de faisceau'),
+('ZZQH002', 'Radiographie d\'une fistule [Fistulographie]'),
+('ZZQK002', 'Radiographie au lit du patient, selon 1 ou 2 incidences'),
+('ZZQL005', 'Recherche scintigraphique de tumeur par émetteur monophotonique non spécifique des tumeurs'),
+('ZZQL007', 'Tomoscintigraphie complémentaire d\'une image planaire'),
+('ZZQL012', 'Recherche scintigraphique de tumeur par émetteur monophotonique spécifique des tumeurs'),
+('ZZQM004', 'Échographie transcutanée, au lit du malade'),
+('ZZQP001', 'Surveillance médicalisée du transport intrahospitalier d\'un patient non ventilé'),
+('ZZQP003', 'Surveillance médicalisée du transport intrahospitalier d\'un patient ventilé');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ths_examen_bio`
+--
+
+DROP TABLE IF EXISTS `ths_examen_bio`;
+CREATE TABLE IF NOT EXISTS `ths_examen_bio` (
+  `code_tnb` char(4) NOT NULL,
+  `libelle_examen_bio` varchar(80) NOT NULL,
+  PRIMARY KEY (`code_tnb`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `ths_examen_bio`
+--
+
+INSERT INTO `ths_examen_bio` (`code_tnb`, `libelle_examen_bio`) VALUES
+('1', 'ACIDE URIQUE'),
+('10', 'ANTICORPS ANTINUCLEAIRE'),
+('11', 'ANTICORPS ANTITHYROIDIENS'),
+('12', 'ANTIGENE CARCINOEMBRYONAIRE'),
+('13', 'ANTISTREPTOLYSINE'),
+('15', 'ANTITHROMBINE III'),
+('16', 'APOLIPOPROTEINES'),
+('17', 'BILIRUBINE'),
+('18', 'CA 15'),
+('19', 'CA 19'),
+('2', 'ACTH'),
+('20', 'CA 50'),
+('21', 'CA 125'),
+('22', 'CALCITONINE'),
+('23', 'CALCIUM'),
+('24', 'CATECHOLAMINES'),
+('25', 'CELLULES DE HARGRAVE'),
+('26', 'CHOLESTEROL-HDL'),
+('27', 'CHOLESTEROL TOTAL'),
+('28', 'CORTICOSTERONE'),
+('29', 'CORTISOL'),
+('3', 'ACTIVITE ANTI XA (pour les HBPM)'),
+('30', 'CPK CREATINE KINASE'),
+('31', 'CREATININE'),
+('32', 'D-DIMERES'),
+('33', 'ELECTROPHORESE DES PROTEINES'),
+('34', 'FACTEUR INTRINSEQUE'),
+('35', 'FACTEUR RHUMATOIDE'),
+('36', 'FER'),
+('37', 'FERRITINE'),
+('38', 'FIBRINOGENE'),
+('39', 'FOLATES (acide folique)'),
+('4', 'AGGLUTININES IRREGULIERES'),
+('40', 'FSH'),
+('41', 'GLUCAGON'),
+('42', 'GLYCEMIE'),
+('43', 'GROUPES SANGUINS et FACTEUR RHESUS'),
+('44', 'GAMMA GT'),
+('45', 'BETA HCG'),
+('46', 'HEMOCULTURE'),
+('47', 'HEMOGLOBINE GLYCOSILEE'),
+('48', 'HEPATITES VIRALES'),
+('49', 'HIV'),
+('5', 'ALCOOL ETHYLIQUE'),
+('50', 'HLA'),
+('51', 'HORMONE DE CROISSANCE'),
+('52', 'IMMUNOGLOBULINES E TOTALES (Ig E)'),
+('53', 'IMMUNO ELECTROPHORESE DES PROTEINES'),
+('54', 'IMMUNOGLOBULINES'),
+('55', 'IMMUNOGLOBULINES SPECIFIQUES E'),
+('56', 'INSULINE'),
+('57', 'IONOGRAMME SANGUIN'),
+('58', 'LDH'),
+('59', 'LH'),
+('6', 'ALDOSTERONE'),
+('60', 'LIPASE'),
+('61', 'LITHIUM'),
+('62', 'MAGNESIUM'),
+('63', 'MONONUCLEOSE INFECTIEUSE'),
+('64', 'NUMERATION FORMULE SANGUINE'),
+('65', 'OESTRADIOL'),
+('66', 'OESTRIOL'),
+('67', 'OXYDE DE CARBONNE'),
+('68', 'PEPTIDE C'),
+('69', 'PHENYLLALALINE'),
+('7', 'ALPHA FOETOPROTEINE'),
+('70', 'PHOSPHATASES ACIDES PROSTATIQUES'),
+('71', 'PHOSPHORE'),
+('72', 'PHOSPHATASES ALCALINES'),
+('73', 'PLAQUETTES'),
+('74', 'PROGESTERONE'),
+('75', 'PROLACTINE'),
+('76', 'PROTEINE C REACTIVE (PCR)'),
+('77', 'PROTIDES TOTAUX'),
+('78', 'RESERVE ALCALINE'),
+('79', 'RUBEOLE'),
+('8', 'ALUMINIUM'),
+('80', 'SYPHILIS'),
+('81', 'TP ET INR'),
+('82', 'TEMPS DE CEPHALINE ACTIVE (TCA)'),
+('83', 'TESTOSTERONE'),
+('84', 'THROMBOTEST D\'OWREN'),
+('85', 'THYREOSTIMULINE (TSH)'),
+('86', 'THYROGLOBULINE'),
+('87', 'THYROXINE (T4)'),
+('88', 'TRANSAMINASES (ASAT,ALAT)'),
+('89', 'TRANSFERINE ou SIDEROPHILINE'),
+('9', 'AMYLASE'),
+('90', 'TRIGLYCERIDES'),
+('91', 'TRIIODOTHYRONINE (T3)'),
+('92', 'UREE'),
+('93', 'VITAMINE A'),
+('94', 'VITAMINE B12'),
+('95', 'VITAMINE D'),
+('96', 'VITESSE DE SEDIMENTATION GLOBULAIRE');
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
