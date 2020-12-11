@@ -66,8 +66,8 @@ date_default_timezone_set('Europe/Paris');
                 <select class="form-control" name="service" placeholder="Service*" required>
                     <option selected>Service*</option>
                     <?php
-                    try {
-                        $bdd = new PDO('mysql:host=localhost;dbname=infection', 'root', '',     array(PDO::ATTR_ERRMODE =>     PDO::ERRMODE_EXCEPTION));
+                    try {$bdd = new PDO('mysql:host=localhost;dbname=infection', 'root', '',  array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8",PDO::ATTR_ERRMODE =>         PDO::ERRMODE_EXCEPTION));
+                       // $bdd = new PDO('mysql:host=localhost;dbname=infection', 'root', '',     array(PDO::ATTR_ERRMODE =>     PDO::ERRMODE_EXCEPTION));
                     } catch (Exception $e) {
                         die('Erreur : ' . $e->getMessage());
                     };
