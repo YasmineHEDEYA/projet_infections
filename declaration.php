@@ -63,7 +63,7 @@ session_start();
                     <?php
                     include("connexion.php");
 
-                    $requete = 'SELECT id_inf, date_declaration FROM `centre_hospitalier` 
+                    $requete = 'SELECT date_declaration FROM `centre_hospitalier` 
                 LEFT JOIN `site` ON `site`.`id_centre` = `centre_hospitalier`.`id_centre` 
                 LEFT JOIN `service` ON `service`.`id_site` = `site`.`id_site` 
                 LEFT JOIN `est_hospitalise` ON `est_hospitalise`.`id_service` = `service`.`id_service` 
@@ -71,17 +71,17 @@ session_start();
                     $resultat = $bdd->query($requete);
                     $ligne = $resultat->fetch();
 
-                    while ($ligne) {
+                    if ($ligne != NULL) {
 
-                        echo "<option value=" . $ligne['id_inf'] . ">" . $ligne['date_declaration'] . "</option> ";
+                        echo "<option>" . $ligne['date_declaration'] . "</option> ";
                         $ligne = $resultat->fetch();
-                    };
+                    }
                     $resultat->closeCursor();
                     ?>
                 </select>
 
                 <br />
-                <button class="btn btn-info btn-block my-4" type="submit" style="background-color:#4f798d ;box-shadow:2px 2px 5px #24363f">Suivant</button>
+                <button class='btn btn-info btn-block my-4' type='submit' style='background-color:#4f798d ;box-shadow:2px 2px 5px #24363f'>Suivant</button>
                 <button onclick="window.location.href='recherche_infection.php'" class="btn btn-info btn-block my-4" type="button" style="background-color:#4f798d ;box-shadow:2px 2px 5px #24363f">Retour</button>
 
         </form>

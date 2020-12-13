@@ -70,7 +70,7 @@ session_start();
                 <option value="nom_service">Service</option>
                 <option value="date_declaration">Date de déclaration</option>
                 <option value="infection.id_personnel">Personnel</option>
-                <option value="tout">Tout</option>
+                <option value="tout">Tout afficher</option>
             </select>
             <br />
             <button class="btn btn-info btn-block my-4" type="submit" formaction="infection.php" style="background-color:#4f798d ;box-shadow:2px 2px 5px #24363f">Suivant</button>

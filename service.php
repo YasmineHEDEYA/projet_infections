@@ -56,31 +56,36 @@ session_start();
 
             <legend>
                 <h5 style="text-shadow: 2px 2px 5px #24363f">Veuillez choisir le service concerné</h5>
-                <br />
-                <p class="float-sm-left">* Information requise</p>
-                <select class="form-control" name="servicesearch" placeholder="Service*" required>
-                    <option selected>Service*</option>
-                    <?php
-                    include("connexion.php");
+            </legend>
+            <br />
+            <p class="float-sm-left">* Information requise</p>
 
-                    $requete = 'SELECT id_service, nom_service FROM `centre_hospitalier` 
+            <select class="form-control" name="servicesearch" placeholder="Service*" required>
+                <option selected>Service*</option>
+                <?php
+                include("connexion.php");
+
+                $requete = 'SELECT nom_service 
+                    FROM `centre_hospitalier` 
                 LEFT JOIN `site` ON `site`.`id_centre` = `centre_hospitalier`.`id_centre` 
-                LEFT JOIN `service` ON `service`.`id_site` = `site`.`id_site` where nom_centre="' . $_SESSION['centre_hospitalier'] . '"';
-                    $resultat = $bdd->query($requete);
+                LEFT JOIN `service` ON `service`.`id_site` = `site`.`id_site` 
+                WHERE nom_centre = "' . $_SESSION['centre_hospitalier'] . '"';
+
+                $resultat = $bdd->query($requete);
+                $ligne = $resultat->fetch();
+
+                while ($ligne) {
+
+                    echo "<option>" . $ligne['nom_service'] . "</option> ";
                     $ligne = $resultat->fetch();
+                };
+                $resultat->closeCursor();
+                ?>
+            </select>
 
-                    while ($ligne) {
-
-                        echo "<option value=" . $ligne['id_service'] . ">" . $ligne['nom_service'] . "</option> ";
-                        $ligne = $resultat->fetch();
-                    };
-                    $resultat->closeCursor();
-                    ?>
-                </select>
-
-                <br />
-                <button class="btn btn-info btn-block my-4" type="submit" style="background-color:#4f798d ;box-shadow:2px 2px 5px #24363f">Suivant</button>
-                <button onclick="window.location.href='recherche_infection.php'" class="btn btn-info btn-block my-4" type="button" style="background-color:#4f798d ;box-shadow:2px 2px 5px #24363f">Retour</button>
+            <br />
+            <button class="btn btn-info btn-block my-4" type="submit" style="background-color:#4f798d ;box-shadow:2px 2px 5px #24363f">Suivant</button>
+            <button onclick="window.location.href='recherche_infection.php'" class="btn btn-info btn-block my-4" type="button" style="background-color:#4f798d ;box-shadow:2px 2px 5px #24363f">Retour</button>
 
         </form>
 
