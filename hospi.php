@@ -78,8 +78,8 @@ session_start();
                 FROM `centre_hospitalier` 
                     LEFT JOIN `site` ON `site`.`id_centre` = `centre_hospitalier`.`id_centre` 
                     LEFT JOIN `service` ON `service`.`id_site` = `site`.`id_site` 
-                    LEFT JOIN `est_hospitalise` ON `est_hospitalise`.`id_service` = `service`.`id_service` 
-                    LEFT JOIN `infection` ON `infection`.`nip` = `est_hospitalise`.`nip` 
+                    LEFT JOIN `hospitalisation` ON `hospitalisation`.`id_service` = `service`.`id_service` 
+                    LEFT JOIN `infection` ON `infection`.`id_hospi` = `hospitalisation`.`id_hospi` 
                     LEFT JOIN `personnel` ON `infection`.`id_personnel` = `personnel`.`id_personnel`
                     WHERE nom_centre = :p_centre AND id_inf = :p_inf');
 

@@ -66,12 +66,12 @@ session_start();
                     $requete = 'SELECT date_declaration FROM `centre_hospitalier` 
                 LEFT JOIN `site` ON `site`.`id_centre` = `centre_hospitalier`.`id_centre` 
                 LEFT JOIN `service` ON `service`.`id_site` = `site`.`id_site` 
-                LEFT JOIN `est_hospitalise` ON `est_hospitalise`.`id_service` = `service`.`id_service` 
-                LEFT JOIN `infection` ON `infection`.`nip` = `est_hospitalise`.`nip` where nom_centre="' . $_SESSION['centre_hospitalier'] . '"';
+                LEFT JOIN `hospitalisation` ON `hospitalisation`.`id_service` = `service`.`id_service` 
+                LEFT JOIN `infection` ON `infection`.`id_hospi` = `hospitalisation`.`id_hospi` WHERE nom_centre = "' . $_SESSION['centre_hospitalier'] . '"';
                     $resultat = $bdd->query($requete);
                     $ligne = $resultat->fetch();
 
-                    if ($ligne != NULL) {
+                    while ($ligne) {
 
                         echo "<option>" . $ligne['date_declaration'] . "</option> ";
                         $ligne = $resultat->fetch();

@@ -77,8 +77,8 @@ session_start();
                 FROM `centre_hospitalier` 
                     LEFT JOIN `site` ON `site`.`id_centre` = `centre_hospitalier`.`id_centre` 
                     LEFT JOIN `service` ON `service`.`id_site` = `site`.`id_site` 
-                    LEFT JOIN `est_hospitalise` ON `est_hospitalise`.`id_service` = `service`.`id_service` 
-                    LEFT JOIN `infection` ON `infection`.`nip` = `est_hospitalise`.`nip` 
+                    LEFT JOIN `hospitalisation` ON `hospitalisation`.`id_service` = `service`.`id_service` 
+                    LEFT JOIN `infection` ON `infection`.`id_hospi` = `hospitalisation`.`id_hospi` 
                     LEFT JOIN `personnel` ON `infection`.`id_personnel` = `personnel`.`id_personnel`
                     WHERE (nom_centre = :p_centre AND infection.nip = :p_nip)');
 
@@ -86,8 +86,8 @@ session_start();
                 FROM `centre_hospitalier` 
                     LEFT JOIN `site` ON `site`.`id_centre` = `centre_hospitalier`.`id_centre` 
                     LEFT JOIN `service` ON `service`.`id_site` = `site`.`id_site` 
-                    LEFT JOIN `est_hospitalise` ON `est_hospitalise`.`id_service` = `service`.`id_service` 
-                    LEFT JOIN `infection` ON `infection`.`nip` = `est_hospitalise`.`nip` 
+                    LEFT JOIN `hospitalisation` ON `hospitalisation`.`id_service` = `service`.`id_service` 
+                    LEFT JOIN `infection` ON `infection`.`id_hospi` = `hospitalisation`.`id_hospi` 
                     LEFT JOIN `personnel` ON `infection`.`id_personnel` = `personnel`.`id_personnel`
                     WHERE (nom_centre = :p_centre AND nom_service = :p_service AND id_inf IS NOT NULL)');
 
@@ -95,17 +95,17 @@ session_start();
                 FROM `centre_hospitalier` 
                     LEFT JOIN `site` ON `site`.`id_centre` = `centre_hospitalier`.`id_centre` 
                     LEFT JOIN `service` ON `service`.`id_site` = `site`.`id_site` 
-                    LEFT JOIN `est_hospitalise` ON `est_hospitalise`.`id_service` = `service`.`id_service` 
-                    LEFT JOIN `infection` ON `infection`.`nip` = `est_hospitalise`.`nip` 
+                    LEFT JOIN `hospitalisation` ON `hospitalisation`.`id_service` = `service`.`id_service` 
+                    LEFT JOIN `infection` ON `infection`.`id_hospi` = `hospitalisation`.`id_hospi` 
                     LEFT JOIN `personnel` ON `infection`.`id_personnel` = `personnel`.`id_personnel`
                     WHERE (nom_centre = :p_centre AND date_declaration = :p_date)');
 
-                $req3 = $bdd->prepare('SELECT DISTINCT id_inf,date_declaration, date_fin, type_inf,infection.nip ,nom_service
+                $req3 = $bdd->prepare('SELECT id_inf,date_declaration, date_fin, type_inf,infection.nip ,nom_service
                 FROM `centre_hospitalier` 
                     LEFT JOIN `site` ON `site`.`id_centre` = `centre_hospitalier`.`id_centre` 
                     LEFT JOIN `service` ON `service`.`id_site` = `site`.`id_site` 
-                    LEFT JOIN `est_hospitalise` ON `est_hospitalise`.`id_service` = `service`.`id_service` 
-                    LEFT JOIN `infection` ON `infection`.`nip` = `est_hospitalise`.`nip` 
+                    LEFT JOIN `hospitalisation` ON `hospitalisation`.`id_service` = `service`.`id_service` 
+                    LEFT JOIN `infection` ON `infection`.`id_hospi` = `hospitalisation`.`id_hospi` 
                     LEFT JOIN `personnel` ON `infection`.`id_personnel` = `personnel`.`id_personnel`
                     WHERE (nom_centre = :p_centre AND infection.id_personnel = :p_personnel)');
 
@@ -113,98 +113,123 @@ session_start();
                 FROM `centre_hospitalier` 
                     LEFT JOIN `site` ON `site`.`id_centre` = `centre_hospitalier`.`id_centre` 
                     LEFT JOIN `service` ON `service`.`id_site` = `site`.`id_site` 
-                    LEFT JOIN `est_hospitalise` ON `est_hospitalise`.`id_service` = `service`.`id_service` 
-                    LEFT JOIN `infection` ON `infection`.`nip` = `est_hospitalise`.`nip` 
+                    LEFT JOIN `hospitalisation` ON `hospitalisation`.`id_service` = `service`.`id_service` 
+                    LEFT JOIN `infection` ON `infection`.`id_hospi` = `hospitalisation`.`id_hospi` 
                     LEFT JOIN `personnel` ON `infection`.`id_personnel` = `personnel`.`id_personnel`
                     WHERE nom_centre = :p_centre AND id_inf IS NOT NULL');
 
                 if ($_REQUEST['SearchCritere'] == "infection.nip") {
                     $req->execute(array(':p_centre' => $_SESSION['centre_hospitalier'], ':p_nip' => $_POST['nip']));
                     $ligne = $req->fetch();
-                    echo "<thead><tr><th>DATE DECLARATION</th><th>DATE FIN</th><th>INFECTION TYPE</th><th>ID PERSONNEL</th><th>NOM SERVICE</th><th>PLUS</th></tr></thead>";
-                    while ($ligne) {
-                        echo "<tr>";
-                        echo "<td>" . $ligne['date_declaration'] . "</td> ";
-                        echo "<td>" . $ligne['date_fin'] . "</td> ";
-                        echo "<td>" . $ligne['type_inf'] . "</td> ";
-                        echo "<td>" . $ligne['id_personnel'] . "</td> ";
-                        echo "<td>" . $ligne['nom_service'] . "</td>";
-                        echo "<td><button class='btn btn-info btn-block' style='background-color:#4f798d ;box-shadow:2px 2px 5px #24363f'><a href='type.php?type_inf=" . $ligne['type_inf'] . "&id_inf=" . $ligne['id_inf'] . "'>afficher plus</a></button></td>";
-                        echo "</tr>";
-                        $ligne = $req->fetch();
-                    } 
+
+                    if ($ligne != NULL) {
+                        echo "<thead><tr><th>DATE DECLARATION</th><th>DATE FIN</th><th>INFECTION TYPE</th><th>ID PERSONNEL</th><th>NOM SERVICE</th><th>PLUS</th></tr></thead>";
+                        while ($ligne) {
+                            echo "<tr>";
+                            echo "<td>" . $ligne['date_declaration'] . "</td> ";
+                            echo "<td>" . $ligne['date_fin'] . "</td> ";
+                            echo "<td>" . $ligne['type_inf'] . "</td> ";
+                            echo "<td>" . $ligne['id_personnel'] . "</td> ";
+                            echo "<td>" . $ligne['nom_service'] . "</td>";
+                            echo "<td><button class='btn btn-info btn-block' style='background-color:#4f798d ;box-shadow:2px 2px 5px #24363f'><a href='type.php?type_inf=" . $ligne['type_inf'] . "&id_inf=" . $ligne['id_inf'] . "'>afficher plus</a></button></td>";
+                            echo "</tr>";
+                            $ligne = $req->fetch();
+                        }
+                    } else {
+                        echo "<h5> Aucune donnée n'a été retrouvée </h5>";
+                    }
                 }
                 $req->closeCursor();
 
                 if ($_REQUEST['SearchCritere'] == "nom_service") {
                     $req1->execute(array(':p_centre' => $_SESSION['centre_hospitalier'], ':p_service' => $_POST['servicesearch']));
                     $ligne = $req1->fetch();
-                    echo "<thead><tr><th>DATE DECLARATION</th><th>DATE FIN</th><th>INFECTION TYPE</th><th>ID PERSONNEL</th><th>NIP</th><th>PLUS</th></tr></thead>";
-                    while ($ligne) {
-                        echo "<tr>";
-                        echo "<td>" . $ligne['date_declaration'] . "</td> ";
-                        echo "<td>" . $ligne['date_fin'] . "</td> ";
-                        echo "<td>" . $ligne['type_inf'] . "</td> ";
-                        echo "<td>" . $ligne['id_personnel'] . "</td> ";
-                        echo "<td>" . $ligne['nip'] . "</td>";
-                        echo "<td><button class='btn btn-info btn-block' style='background-color:#4f798d ;box-shadow:2px 2px 5px #24363f'><a href='type.php?type_inf=" . $ligne['type_inf'] . "&id_inf=" . $ligne['id_inf'] . "'>afficher plus</a></button></td>";
-                        echo "</tr>";
-                        $ligne = $req1->fetch();
-                    } 
+
+                    if ($ligne != NULL) {
+                        echo "<thead><tr><th>DATE DECLARATION</th><th>DATE FIN</th><th>INFECTION TYPE</th><th>ID PERSONNEL</th><th>NIP</th><th>PLUS</th></tr></thead>";
+                        while ($ligne) {
+                            echo "<tr>";
+                            echo "<td>" . $ligne['date_declaration'] . "</td> ";
+                            echo "<td>" . $ligne['date_fin'] . "</td> ";
+                            echo "<td>" . $ligne['type_inf'] . "</td> ";
+                            echo "<td>" . $ligne['id_personnel'] . "</td> ";
+                            echo "<td>" . $ligne['nip'] . "</td>";
+                            echo "<td><button class='btn btn-info btn-block' style='background-color:#4f798d ;box-shadow:2px 2px 5px #24363f'><a href='type.php?type_inf=" . $ligne['type_inf'] . "&id_inf=" . $ligne['id_inf'] . "'>afficher plus</a></button></td>";
+                            echo "</tr>";
+                            $ligne = $req1->fetch();
+                        }
+                    } else {
+                        echo "<h5> Aucune donnée n'a été retrouvée </h5>";
+                    }
                 }
                 $req1->closeCursor();
 
                 if ($_REQUEST['SearchCritere'] == "date_declaration") {
                     $req2->execute(array(':p_centre' => $_SESSION['centre_hospitalier'], ':p_date' => $_POST['declaration']));
                     $ligne = $req2->fetch();
-                    echo "<thead><tr><th>NOM SERVICE</th><th>INFECTION TYPE</th><th>ID PERSONNEL</th><th>NIP</th><th>PLUS</th></tr></thead>";
-                    while ($ligne) {
-                        echo "<tr>";
-                        echo "<td>" . $ligne['nom_service'] . "</td> ";
-                        echo "<td>" . $ligne['type_inf'] . "</td> ";
-                        echo "<td>" . $ligne['id_personnel'] . "</td> ";
-                        echo "<td>" . $ligne['nip'] . "</td>";
-                        echo "<td><button class='btn btn-info btn-block' style='background-color:#4f798d ;box-shadow:2px 2px 5px #24363f'><a href='type.php?type_inf=" . $ligne['type_inf'] . "&id_inf=" . $ligne['id_inf'] . "'>afficher plus</a></button></td>";
-                        echo "</tr>";
-                        $ligne = $req2->fetch();
-                    } 
+
+                    if ($ligne != NULL) {
+                        echo "<thead><tr><th>NOM SERVICE</th><th>INFECTION TYPE</th><th>ID PERSONNEL</th><th>NIP</th><th>PLUS</th></tr></thead>";
+                        while ($ligne) {
+                            echo "<tr>";
+                            echo "<td>" . $ligne['nom_service'] . "</td> ";
+                            echo "<td>" . $ligne['type_inf'] . "</td> ";
+                            echo "<td>" . $ligne['id_personnel'] . "</td> ";
+                            echo "<td>" . $ligne['nip'] . "</td>";
+                            echo "<td><button class='btn btn-info btn-block' style='background-color:#4f798d ;box-shadow:2px 2px 5px #24363f'><a href='type.php?type_inf=" . $ligne['type_inf'] . "&id_inf=" . $ligne['id_inf'] . "'>afficher plus</a></button></td>";
+                            echo "</tr>";
+                            $ligne = $req2->fetch();
+                        }
+                    } else {
+                        echo "<h5> Aucune donnée n'a été retrouvée </h5>";
+                    }
                 }
                 $req2->closeCursor();
 
                 if ($_REQUEST['SearchCritere'] == "infection.id_personnel") {
                     $req3->execute(array(':p_centre' => $_SESSION['centre_hospitalier'], ':p_personnel' => $_POST['id_personnel']));
                     $ligne = $req3->fetch();
-                    echo "<thead><tr><th>DATE DECLARATION</th><th>DATE FIN</th><th>INFECTION TYPE</th><th>NOM SERVICE</th><th>NIP</th><th>PLUS</th></tr></thead>";
-                    while ($ligne) {
-                        echo "<tr>";
-                        echo "<td>" . $ligne['date_declaration'] . "</td> ";
-                        echo "<td>" . $ligne['date_fin'] . "</td> ";
-                        echo "<td>" . $ligne['type_inf'] . "</td> ";
-                        echo "<td>" . $ligne['nom_service'] . "</td> ";
-                        echo "<td>" . $ligne['nip'] . "</td>";
-                        echo "<td><button class='btn btn-info btn-block' style='background-color:#4f798d ;box-shadow:2px 2px 5px #24363f'><a href='type.php?type_inf=" . $ligne['type_inf'] . "&id_inf=" . $ligne['id_inf'] . "'>afficher plus</a></button></td>";
-                        echo "</tr>";
-                        $ligne = $req3->fetch();
-                    } 
+
+                    if ($ligne != NULL) {
+                        echo "<thead><tr><th>DATE DECLARATION</th><th>DATE FIN</th><th>INFECTION TYPE</th><th>NOM SERVICE</th><th>NIP</th><th>PLUS</th></tr></thead>";
+                        while ($ligne) {
+                            echo "<tr>";
+                            echo "<td>" . $ligne['date_declaration'] . "</td> ";
+                            echo "<td>" . $ligne['date_fin'] . "</td> ";
+                            echo "<td>" . $ligne['type_inf'] . "</td> ";
+                            echo "<td>" . $ligne['nom_service'] . "</td> ";
+                            echo "<td>" . $ligne['nip'] . "</td>";
+                            echo "<td><button class='btn btn-info btn-block' style='background-color:#4f798d ;box-shadow:2px 2px 5px #24363f'><a href='type.php?type_inf=" . $ligne['type_inf'] . "&id_inf=" . $ligne['id_inf'] . "'>afficher plus</a></button></td>";
+                            echo "</tr>";
+                            $ligne = $req3->fetch();
+                        }
+                    } else {
+                        echo "<h5> Aucune donnée n'a été retrouvée </h5>";
+                    }
                 }
                 $req3->closeCursor();
 
                 if ($_REQUEST['SearchCritere'] == "tout") {
                     $req4->execute(array(':p_centre' => $_SESSION['centre_hospitalier']));
                     $ligne = $req4->fetch();
-                    echo "<thead><tr><th>DATE DECLARATION</th><th>DATE FIN</th><th>INFECTION TYPE</th><th>ID PERSONNEL</th><th>NIP</th><th>NOM SERVICE</th><th>PLUS</th></tr></thead>";
-                    while ($ligne) {
-                        echo "<tr>";
-                        echo "<td>" . $ligne['date_declaration'] . "</td> ";
-                        echo "<td>" . $ligne['date_fin'] . "</td> ";
-                        echo "<td>" . $ligne['type_inf'] . "</td> ";
-                        echo "<td>" . $ligne['id_personnel'] . "</td> ";
-                        echo "<td>" . $ligne['nip'] . "</td>";
-                        echo "<td>" . $ligne['nom_service'] . "</td>";
-                        echo "<td><button class='btn btn-info btn-block' style='background-color:#4f798d ;box-shadow:2px 2px 5px #24363f'><a href='type.php?type_inf=" . $ligne['type_inf'] . "&id_inf=" . $ligne['id_inf'] . "'>afficher plus</a></button></td>";
-                        echo "</tr>";
-                        $ligne = $req4->fetch();
-                    } 
+
+                    if ($ligne != NULL) {
+                        echo "<thead><tr><th>DATE DECLARATION</th><th>DATE FIN</th><th>INFECTION TYPE</th><th>ID PERSONNEL</th><th>NIP</th><th>NOM SERVICE</th><th>PLUS</th></tr></thead>";
+                        while ($ligne) {
+                            echo "<tr>";
+                            echo "<td>" . $ligne['date_declaration'] . "</td> ";
+                            echo "<td>" . $ligne['date_fin'] . "</td> ";
+                            echo "<td>" . $ligne['type_inf'] . "</td> ";
+                            echo "<td>" . $ligne['id_personnel'] . "</td> ";
+                            echo "<td>" . $ligne['nip'] . "</td>";
+                            echo "<td>" . $ligne['nom_service'] . "</td>";
+                            echo "<td><button class='btn btn-info btn-block' style='background-color:#4f798d ;box-shadow:2px 2px 5px #24363f'><a href='type.php?type_inf=" . $ligne['type_inf'] . "&id_inf=" . $ligne['id_inf'] . "'>afficher plus</a></button></td>";
+                            echo "</tr>";
+                            $ligne = $req4->fetch();
+                        }
+                    } else {
+                        echo "<h5> Aucune donnée n'a été retrouvée </h5>";
+                    }
                 }
                 $req4->closeCursor();
                 ?>

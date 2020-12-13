@@ -65,21 +65,21 @@ session_start();
                 <?php
                 include("connexion.php");
 
-                $requete = 'SELECT nom_service 
+                $requete = $bdd->prepare('SELECT nom_service 
                     FROM `centre_hospitalier` 
-                LEFT JOIN `site` ON `site`.`id_centre` = `centre_hospitalier`.`id_centre` 
-                LEFT JOIN `service` ON `service`.`id_site` = `site`.`id_site` 
-                WHERE nom_centre = "' . $_SESSION['centre_hospitalier'] . '"';
+                    LEFT JOIN `site` ON `site`.`id_centre` = `centre_hospitalier`.`id_centre` 
+                    LEFT JOIN `service` ON `service`.`id_site` = `site`.`id_site` 
+                WHERE nom_centre = :p_centre');
 
-                $resultat = $bdd->query($requete);
-                $ligne = $resultat->fetch();
+                $requete->execute(array(':p_centre' => $_SESSION['centre_hospitalier']));
+                $ligne = $requete->fetch();
 
                 while ($ligne) {
 
                     echo "<option>" . $ligne['nom_service'] . "</option> ";
-                    $ligne = $resultat->fetch();
+                    $ligne = $requete->fetch();
                 };
-                $resultat->closeCursor();
+                $requete->closeCursor();
                 ?>
             </select>
 

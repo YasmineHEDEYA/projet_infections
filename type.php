@@ -100,12 +100,12 @@ session_start();
                 if ($_REQUEST['type_inf'] == "cible") {
                     $req1->execute(array(':p_inf' => $_REQUEST['id_inf']));
                     $ligne = $req1->fetch();
-                    echo "<thead><tr><th>NATURE</th><th>CAUSE</th><th>PLUS</th></tr></thead>";
+                    echo "<thead><tr><th>ID INFECTION SOURCE</th><th>TRANSMISSION</th><th>PLUS</th></tr></thead>";
                     while ($ligne) {
                         echo "<tr>";
-                        echo "<td>" . $ligne['nature'] . "</td> ";
-                        echo "<td>" . $ligne['cause'] . "</td> ";
-                        echo "<td width='10%'><button class='btn btn-info btn-block' style='background-color:#4f798d ;box-shadow:2px 2px 5px #24363f'><a href='hospi.php?type_inf=" . $_REQUEST['id_inf'] . "'>hospitalisation</a></button></td>";
+                        echo "<td>" . $ligne['id_inf_INFECTION_SOURCE'] . "</td> ";
+                        echo "<td>" . $ligne['transmission'] . "</td> ";
+                        echo "<td width='10%'><button class='btn btn-info btn-block' style='background-color:#4f798d ;box-shadow:2px 2px 5px #24363f'><a href='hospi.php?id_inf=" . $_REQUEST['id_inf'] . "'>hospitalisation</a></button></td>";
                         echo "</tr>";
                         $ligne = $req1->fetch();
                     }
