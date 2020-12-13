@@ -10,7 +10,7 @@ try {$bdd = new PDO('mysql:host=localhost;dbname=infection', 'root', '',  array(
 } catch (Exception $e) {
         die('Erreur : ' . $e->getMessage());
 };
-$req = $bdd->prepare('SELECT nip FROM patient join est_hospitalise using(nip)
+$req = $bdd->prepare('SELECT nip FROM patient join hospitalisation using(nip)
 join `service` using(id_service) WHERE nip like :p_nip and id_service like :p_service');
 
 $req->execute(array('p_nip' => $_SESSION['nip'], 'p_service' => $_POST['service']));

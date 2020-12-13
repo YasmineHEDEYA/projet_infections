@@ -14,8 +14,8 @@ try {$bdd = new PDO('mysql:host=localhost;dbname=infection', 'root', '',  array(
 } catch (Exception $e) {
     die('Erreur : ' . $e->getMessage());
 };
-$req = 'INSERT INTO infection (date_declaration,date_fin,type_inf,id_personnel,nip) VALUES 
-("' . $_SESSION['date_declaration'] . '" , "' . $_SESSION['date_fin'] . '" , "' . $type . '" , ' . $_SESSION['id_personnel'] . ' , ' . $_SESSION['nip'] . ')';
+$req = 'INSERT INTO infection (date_declaration,date_fin,type_inf,id_personnel,nip,id_hospi) VALUES 
+("' . $_SESSION['date_declaration'] . '" , "' . $_SESSION['date_fin'] . '" , "' . $type . '" , ' . $_SESSION['id_personnel'] . ' , ' . $_SESSION['nip'] . ' , ' . $_SESSION['hospitalisation'] .')';
 // requete insertion sur la table infection
 // contient un trigger qui va remplir la table infection_source ou
 // infection_cible avec l'identifiant et les données déja saisies sur la table mère

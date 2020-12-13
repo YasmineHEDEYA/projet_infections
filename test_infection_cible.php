@@ -8,7 +8,7 @@ catch (Exception $e)
 {
         die('Erreur : ' . $e->getMessage());
 };
-$requete = 'SELECT * FROM service JOIN est_hospitalise using(id_service)
+$requete = 'SELECT * FROM `service` JOIN hospitalisation using(id_service)
 join `site` using (id_site) where nip = '.$_POST['nip_source'];
                $resultat=$bdd->query($requete);
                 

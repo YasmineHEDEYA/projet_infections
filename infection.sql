@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Dec 11, 2020 at 09:21 AM
+-- Generation Time: Dec 13, 2020 at 10:25 PM
 -- Server version: 8.0.21
 -- PHP Version: 7.3.21
 
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS `centre_hospitalier` (
   `id_centre` int NOT NULL,
   `nom_centre` varchar(150) NOT NULL,
   PRIMARY KEY (`id_centre`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `centre_hospitalier`
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS `demande` (
   `date_bio` date NOT NULL,
   KEY `SERVICE_FK` (`id_service`) USING BTREE,
   KEY `ACTE_FK` (`code_tnb`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -72,39 +72,41 @@ CREATE TABLE IF NOT EXISTS `effectue` (
   `code_ccam` varchar(7) NOT NULL,
   KEY `SERVICE_FK` (`id_service`) USING BTREE,
   KEY `ACTE_FK` (`code_ccam`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `est_hospitalise`
+-- Table structure for table `hospitalisation`
 --
 
-DROP TABLE IF EXISTS `est_hospitalise`;
-CREATE TABLE IF NOT EXISTS `est_hospitalise` (
+DROP TABLE IF EXISTS `hospitalisation`;
+CREATE TABLE IF NOT EXISTS `hospitalisation` (
   `id_service` int NOT NULL,
   `nip` int NOT NULL,
   `date_entree` date NOT NULL,
   `date_sortie` date DEFAULT NULL,
   `etat_sante_sortie` tinyint DEFAULT NULL,
   `fr` tinyint(1) DEFAULT NULL,
+  `id_hospi` int NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id_hospi`),
   KEY `SERVICE_FK` (`id_service`) USING BTREE,
   KEY `PATIENT_FK` (`nip`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8;
 
 --
--- Dumping data for table `est_hospitalise`
+-- Dumping data for table `hospitalisation`
 --
 
-INSERT INTO `est_hospitalise` (`id_service`, `nip`, `date_entree`, `date_sortie`, `etat_sante_sortie`, `fr`) VALUES
-(1, 205094, '2020-11-01', '2020-12-17', NULL, NULL),
-(1, 205094, '2020-12-01', '2020-12-18', NULL, NULL),
-(1, 205471, '2020-09-14', '2020-12-04', NULL, NULL),
-(2, 205471, '2020-07-06', '2020-09-11', NULL, NULL),
-(10, 208282, '2020-02-05', '2020-04-10', NULL, NULL),
-(11, 209005, '2020-02-23', '2020-03-18', NULL, NULL),
-(14, 209219, '2020-07-15', '2020-08-31', NULL, NULL),
-(15, 205094, '2019-09-01', '2019-09-19', NULL, NULL);
+INSERT INTO `hospitalisation` (`id_service`, `nip`, `date_entree`, `date_sortie`, `etat_sante_sortie`, `fr`, `id_hospi`) VALUES
+(1, 205094, '2020-11-01', '2020-12-17', NULL, NULL, 1),
+(1, 205094, '2020-12-01', '2020-12-18', NULL, NULL, 2),
+(1, 205471, '2020-09-14', '2020-12-04', NULL, NULL, 3),
+(2, 205471, '2020-07-06', '2020-09-11', NULL, NULL, 4),
+(10, 208282, '2020-02-05', '2020-04-10', NULL, NULL, 5),
+(11, 209005, '2020-02-23', '2020-03-18', NULL, NULL, 6),
+(14, 209219, '2020-07-15', '2020-08-31', NULL, NULL, 7),
+(15, 205094, '2019-09-01', '2019-09-19', NULL, NULL, 8);
 
 -- --------------------------------------------------------
 
@@ -120,28 +122,28 @@ CREATE TABLE IF NOT EXISTS `infection` (
   `type_inf` enum('source','cible') NOT NULL,
   `id_personnel` int NOT NULL,
   `nip` int NOT NULL,
+  `id_hospi` int NOT NULL,
   PRIMARY KEY (`id_inf`),
   KEY `INFECTION_PERSONNEL_FK` (`id_personnel`),
-  KEY `INFECTION_PATIENT0_FK` (`nip`)
-) ENGINE=InnoDB AUTO_INCREMENT=52 DEFAULT CHARSET=latin1;
+  KEY `INFECTION_PATIENT0_FK` (`nip`),
+  KEY `id_hospi` (`id_hospi`)
+) ENGINE=InnoDB AUTO_INCREMENT=60 DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `infection`
 --
 
-INSERT INTO `infection` (`id_inf`, `date_declaration`, `date_fin`, `type_inf`, `id_personnel`, `nip`) VALUES
-(48, '2020-12-26', '2021-01-08', 'source', 1, 205094),
-(49, '2020-12-12', '0000-00-00', 'source', 1, 205094),
-(50, '2020-12-12', '0000-00-00', 'source', 1, 205094),
-(51, '2020-12-19', '0000-00-00', 'cible', 1, 205094);
+INSERT INTO `infection` (`id_inf`, `date_declaration`, `date_fin`, `type_inf`, `id_personnel`, `nip`, `id_hospi`) VALUES
+(58, '2020-12-12', '0000-00-00', 'source', 1, 205094, 2),
+(59, '2020-12-05', '0000-00-00', 'cible', 1, 205094, 1);
 
 --
 -- Triggers `infection`
 --
 DROP TRIGGER IF EXISTS `insertion_infection`;
 DELIMITER $$
-CREATE TRIGGER `insertion_infection` AFTER INSERT ON `infection` FOR EACH ROW if new.type_inf='source'then insert into infection_source ( id_inf,date_declaration,date_fin,type_inf) values(new.id_inf,new.date_declaration,new.date_fin, new.type_inf);
-else insert into infection_cible ( id_inf,date_declaration,date_fin,type_inf) values(new.id_inf,new.date_declaration,new.date_fin, new.type_inf);
+CREATE TRIGGER `insertion_infection` AFTER INSERT ON `infection` FOR EACH ROW if new.type_inf='source'then insert into infection_source ( id_inf,date_declaration,date_fin,type_inf,id_hospi) values(new.id_inf,new.date_declaration,new.date_fin, new.type_inf,new.id_hospi);
+else insert into infection_cible ( id_inf,date_declaration,date_fin,type_inf,id_hospi) values(new.id_inf,new.date_declaration,new.date_fin, new.type_inf, new.id_hospi);
 end if
 $$
 DELIMITER ;
@@ -155,26 +157,27 @@ DELIMITER ;
 DROP TABLE IF EXISTS `infection_cible`;
 CREATE TABLE IF NOT EXISTS `infection_cible` (
   `id_inf` int NOT NULL,
-  `transmission` varchar(100) CHARACTER SET latin1 COLLATE latin1_swedish_ci DEFAULT NULL,
+  `transmission` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
   `date_declaration` date NOT NULL,
   `date_fin` date DEFAULT NULL,
   `type_inf` enum('source','cible') NOT NULL,
   `id_inf_INFECTION_SOURCE` int NOT NULL,
   `id_personnel` int NOT NULL,
   `nip` int NOT NULL,
+  `id_hospi` int NOT NULL,
   PRIMARY KEY (`id_inf`),
   KEY `INFECTION_CIBLE_INFECTION_SOURCE0_FK` (`id_inf_INFECTION_SOURCE`),
   KEY `INFECTION_CIBLE_PERSONNEL1_FK` (`id_personnel`),
   KEY `INFECTION_CIBLE_PATIENT2_FK` (`nip`),
   KEY `id_inf` (`id_inf`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `infection_cible`
 --
 
-INSERT INTO `infection_cible` (`id_inf`, `transmission`, `date_declaration`, `date_fin`, `type_inf`, `id_inf_INFECTION_SOURCE`, `id_personnel`, `nip`) VALUES
-(51, 'dfnw', '2020-12-19', '0000-00-00', 'cible', 205471, 1, 205094);
+INSERT INTO `infection_cible` (`id_inf`, `transmission`, `date_declaration`, `date_fin`, `type_inf`, `id_inf_INFECTION_SOURCE`, `id_personnel`, `nip`, `id_hospi`) VALUES
+(59, 'dfnw', '2020-12-05', '0000-00-00', 'cible', 205471, 1, 205094, 1);
 
 -- --------------------------------------------------------
 
@@ -185,27 +188,26 @@ INSERT INTO `infection_cible` (`id_inf`, `transmission`, `date_declaration`, `da
 DROP TABLE IF EXISTS `infection_source`;
 CREATE TABLE IF NOT EXISTS `infection_source` (
   `id_inf` int NOT NULL,
-  `nature` enum('endogene','exogene') CHARACTER SET latin1 COLLATE latin1_swedish_ci DEFAULT NULL,
-  `cause` varchar(100) CHARACTER SET latin1 COLLATE latin1_swedish_ci DEFAULT NULL,
+  `nature` enum('endogene','exogene') CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `cause` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
   `date_declaration` date NOT NULL,
   `date_fin` date DEFAULT NULL,
   `type_inf` enum('source','cible') NOT NULL,
   `id_personnel` int NOT NULL,
   `nip` int NOT NULL,
+  `id_hospi` int NOT NULL,
   PRIMARY KEY (`id_inf`),
   KEY `INFECTION_SOURCE_PERSONNEL0_FK` (`id_personnel`),
   KEY `INFECTION_SOURCE_PATIENT1_FK` (`nip`),
   KEY `id_inf` (`id_inf`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `infection_source`
 --
 
-INSERT INTO `infection_source` (`id_inf`, `nature`, `cause`, `date_declaration`, `date_fin`, `type_inf`, `id_personnel`, `nip`) VALUES
-(48, 'exogene', '', '2020-12-26', '2021-01-08', 'source', 1, 205094),
-(49, 'exogene', '', '2020-12-12', '0000-00-00', 'source', 1, 205094),
-(50, 'exogene', 'fdbw', '2020-12-12', '0000-00-00', 'source', 1, 205094);
+INSERT INTO `infection_source` (`id_inf`, `nature`, `cause`, `date_declaration`, `date_fin`, `type_inf`, `id_personnel`, `nip`, `id_hospi`) VALUES
+(58, 'exogene', 'fdbw', '2020-12-12', '0000-00-00', 'source', 1, 205094, 2);
 
 -- --------------------------------------------------------
 
@@ -218,7 +220,7 @@ CREATE TABLE IF NOT EXISTS `instrument` (
   `id_instru` int NOT NULL AUTO_INCREMENT,
   `nom_instru` varchar(50) NOT NULL,
   PRIMARY KEY (`id_instru`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `instrument`
@@ -247,11 +249,11 @@ CREATE TABLE IF NOT EXISTS `medecin` (
   `spe_med` varchar(50) NOT NULL,
   `nom_pers` varchar(80) NOT NULL,
   `prenom_pers` varchar(100) NOT NULL,
-  `fonction_pers` varchar(80) CHARACTER SET latin1 COLLATE latin1_swedish_ci DEFAULT NULL,
+  `fonction_pers` varchar(80) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
   `sexe_pers` tinyint(1) DEFAULT NULL,
   PRIMARY KEY (`ID_personnel`),
   KEY `ID_personnel` (`ID_personnel`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `medecin`
@@ -275,7 +277,7 @@ CREATE TABLE IF NOT EXISTS `patient` (
   `prenoms_pat` varchar(100) NOT NULL,
   `date_naiss_pat` date NOT NULL,
   PRIMARY KEY (`nip`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `patient`
@@ -300,10 +302,10 @@ CREATE TABLE IF NOT EXISTS `personnel` (
   `id_personnel` int NOT NULL AUTO_INCREMENT,
   `nom_pers` varchar(80) NOT NULL,
   `prenom_pers` varchar(100) NOT NULL,
-  `fonction_pers` varchar(80) CHARACTER SET latin1 COLLATE latin1_swedish_ci DEFAULT NULL,
+  `fonction_pers` varchar(80) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
   `sexe_pers` tinyint(1) DEFAULT NULL,
   PRIMARY KEY (`id_personnel`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `personnel`
@@ -333,7 +335,7 @@ CREATE TABLE IF NOT EXISTS `realise` (
   KEY `INSTRUMENT_FK` (`id_instru`) USING BTREE,
   KEY `PERSONNEL_FK` (`id_personnel`) USING BTREE,
   KEY `ACTE_FK` (`code_ccam`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -349,7 +351,7 @@ CREATE TABLE IF NOT EXISTS `service` (
   `id_site` int NOT NULL,
   PRIMARY KEY (`id_service`),
   KEY `SERVICE_SITE_FK` (`id_site`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `service`
@@ -391,7 +393,7 @@ CREATE TABLE IF NOT EXISTS `site` (
   `id_centre` int NOT NULL,
   PRIMARY KEY (`id_site`),
   KEY `SITE_CENTRE_HOSPITALIER_FK` (`id_centre`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `site`
@@ -417,9 +419,9 @@ INSERT INTO `site` (`id_site`, `nom_site`, `num`, `rue`, `complement`, `code_pos
 DROP TABLE IF EXISTS `ths_acte`;
 CREATE TABLE IF NOT EXISTS `ths_acte` (
   `code_ccam` varchar(7) NOT NULL,
-  `libelle_acte` text NOT NULL,
+  `libelle_acte` mediumtext NOT NULL,
   PRIMARY KEY (`code_ccam`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `ths_acte`
@@ -1444,7 +1446,7 @@ CREATE TABLE IF NOT EXISTS `ths_examen_bio` (
   `code_tnb` char(4) NOT NULL,
   `libelle_examen_bio` varchar(80) NOT NULL,
   PRIMARY KEY (`code_tnb`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `ths_examen_bio`

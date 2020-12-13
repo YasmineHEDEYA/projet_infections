@@ -84,7 +84,7 @@ session_start();
                         die('Erreur : ' . $e->getMessage());
                     };
 
-                    $req = $bdd->prepare('SELECT date_entree,date_sortie FROM  est_hospitalise 
+                    $req = $bdd->prepare('SELECT id_hospi,date_entree,date_sortie FROM  hospitalisation
                     WHERE nip like :p_nip and id_service like :p_service');
                     $req->execute(array('p_nip' => $_SESSION['nip'], 'p_service' => $_SESSION['service']));
                     $ligne = $req->fetch();
@@ -92,7 +92,7 @@ session_start();
                     while ($ligne) {
 
                         echo "<tr>";
-                        echo "<td><label><input type='radio' value=" . $ligne['date_entree'] . " name='hospitalisation'checked/></label></td>";
+                        echo "<td><label><input type='radio' value=" . $ligne['id_hospi'] . " name='hospitalisation'checked/></label></td>";
                         echo "<td>" . $ligne['date_entree'] . "</td> ";
                         echo "<td>" . $ligne['date_sortie'] . "</td> ";
                         echo "</tr>";

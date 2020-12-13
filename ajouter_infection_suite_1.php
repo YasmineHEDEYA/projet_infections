@@ -54,7 +54,7 @@ date_default_timezone_set('Europe/Paris');
 
         <div>
 
-            <form class="text-center p-4" method='POST' action="test_patient">
+            <form class="text-center p-4" method='POST' action="test_patient.php">
                 <p class="h2 mb-2" style="color:#93acb9; text-shadow: 2px 2px 5px#24363f">DECLARATION D'UNE INFECTION
                 </p>
                 <br />
