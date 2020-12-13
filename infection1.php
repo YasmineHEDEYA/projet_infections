@@ -100,7 +100,7 @@ session_start();
                     LEFT JOIN `personnel` ON `infection`.`id_personnel` = `personnel`.`id_personnel`
                     WHERE (nom_centre = :p_centre AND date_declaration = :p_date)');
 
-                $req3 = $bdd->prepare('SELECT id_inf,date_declaration, date_fin, type_inf,infection.nip ,nom_service
+                $req3 = $bdd->prepare('SELECT DISTINCT id_inf,date_declaration, date_fin, type_inf,infection.nip ,nom_service
                 FROM `centre_hospitalier` 
                     LEFT JOIN `site` ON `site`.`id_centre` = `centre_hospitalier`.`id_centre` 
                     LEFT JOIN `service` ON `service`.`id_site` = `site`.`id_site` 
