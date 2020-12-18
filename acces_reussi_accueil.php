@@ -59,6 +59,7 @@ session_start();
             <div class="col-md-6 offset-md-3">
             <button class="btn btn-info btn-block my-4" type="submit" formaction="formulaire.php" style="background-color:#4f798d ;box-shadow:2px 2px 5px #24363f">Déclarer une infection</button>
             <button class="btn btn-info btn-block my-4" type="submit" formaction="recherche_infection.php" style="background-color:#4f798d ;box-shadow:2px 2px 5px #24363f">Consulter une infection</button>
+            <button class="btn btn-info btn-block my-4" type="submit" formaction="pat.php" style="background-color:#4f798d ;box-shadow:2px 2px 5px #24363f">Gestion de doublons patients</button>
             <button class="btn btn-info btn-block my-4" type="submit" formaction="deconnexion.php" style="background-color:#4f798d ;box-shadow:2px 2px 5px #24363f">Déconnexion</button>
             </div>
         </form>
