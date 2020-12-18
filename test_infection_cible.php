@@ -23,6 +23,7 @@ join `site` using (id_site) where nip = '.$_POST['nip_source'];
 
 $_SESSION['nature_infection']='';
 $_SESSION['cause_infection']='';
+// initialisation à chaine vide pour éviter les incohérances en cas de retour et changement de type d'infection
 $_SESSION['mode_transmission']=$_POST['mode_transmission'];
 $_SESSION['nip_source']=$_POST['nip_source'];
 if($_SESSION['mode_transmission']!= htmlspecialchars($_SESSION['mode_transmission'])|| $_SESSION['nip_source']!= htmlspecialchars($_SESSION['nip_source'])||!$test||strlen($_SESSION['nip_source'])==0 || strlen($_SESSION['mode_transmission'])==0){
